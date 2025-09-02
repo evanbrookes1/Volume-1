@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvestED - Optimise Your Portfolio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Space Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Date Adapter for time-series charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0c0a1e 0%, #1a1832 50%, #0c0a1e 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-20px, -20px) rotate(1deg); }
+            66% { transform: translate(20px, -10px) rotate(-1deg); }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Enhanced loader */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Ticker tag animation */
+        @keyframes slideInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .ticker-tag {
+            animation: slideInScale 0.3s ease-out;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Button effects */
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Input focus effect */
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 27, 75, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+
+        /* Result card animation */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        /* Floating dots background */
+        .dot {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.3);
+            pointer-events: none;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translateY(100vh) translateX(0);
+            }
+            to {
+                transform: translateY(-10vh) translateX(100px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating background elements -->
+    <div class="dot w-2 h-2" style="left: 10%; animation: drift 15s infinite linear;"></div>
+    <div class="dot w-3 h-3" style="left: 30%; animation: drift 20s infinite linear; animation-delay: 3s;"></div>
+    <div class="dot w-2 h-2" style="left: 50%; animation: drift 18s infinite linear; animation-delay: 6s;"></div>
+    <div class="dot w-3 h-3" style="left: 70%; animation: drift 22s infinite linear; animation-delay: 9s;"></div>
+    <div class="dot w-2 h-2" style="left: 90%; animation: drift 17s infinite linear; animation-delay: 12s;"></div>
+
+    <!-- Header / Navigation Bar -->
+    <header class="w-full py-5 px-4 sm:px-6 lg:px-8 z-10 glass sticky top-0">
+        <div class="max-w-7xl mx-auto">
+            <nav class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <svg class="h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                        </svg>
+                        <div class="absolute inset-0 bg-indigo-400 opacity-20 blur-xl"></div>
+                    </div>
+                    <a href="index.html" class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors">InvestED</a>
+                </div>
+
+                <!-- Navigation Links (Desktop) -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="wwa.html" class="text-gray-300 hover:text-white transition-all duration-200 hover:scale-105">Who We Are</a>
+                    <a href="learn.html" class="text-gray-300 hover:text-white transition-all duration-200 hover:scale-105">Learn</a>
+                    <a href="optimise.html" class="font-semibold text-white relative">
+                        Optimise
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-400"></span>
+                    </a>
+                    <a href="trade.html" class="text-gray-300 hover:text-white transition-all duration-200 hover:scale-105">Trading</a>
+                    <a href="news.html" class="text-gray-300 hover:text-white transition-all duration-200 hover:scale-105">Reports</a>
+                </div>
+
+                <!-- Log In Link -->
+                <div class="hidden md:block">
+                    <a href="#" class="flex items-center text-gray-300 hover:text-white transition-all duration-200 hover:scale-105">
+                        <span>Log in</span>
+                        <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="py-16 sm:py-20 relative">
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-900/5 to-transparent"></div>
+            <div class="max-w-7xl mx-auto px-4 relative">
+                <!-- Header -->
+                <div class="text-center max-w-3xl mx-auto mb-12">
+                    <div class="inline-block mb-4">
+                        <span class="px-4 py-1 bg-green-500/10 text-green-400 text-xs font-semibold rounded-full">
+                            AI-Powered Analysis
+                        </span>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
+                        Optimize Your
+                        <span class="gradient-text"> Investment Portfolio</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-gray-400">
+                        Discover your optimal asset allocation using Modern Portfolio Theory. Find the perfect balance between risk and return.
+                    </p>
+                </div>
+                
+                <!-- Feature Pills -->
+                <div class="flex flex-wrap justify-center gap-3 mb-12">
+                    <div class="px-4 py-2 glass rounded-full text-sm text-gray-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Efficient Frontier Analysis
+                    </div>
+                    <div class="px-4 py-2 glass rounded-full text-sm text-gray-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Sharpe Ratio Optimisation
+                    </div>
+                    <div class="px-4 py-2 glass rounded-full text-sm text-gray-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Risk-Adjusted Returns
+                    </div>
+                </div>
+
+                <!-- Input Section with Enhanced Styling -->
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass rounded-2xl p-8 shadow-2xl card-hover">
+                        <div class="flex items-center mb-6">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white mr-4">
+                                <span class="font-bold text-xl">1</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white">Enter Your Holdings</h2>
+                                <p class="text-sm text-gray-400">Add stock tickers you want to analyse</p>
+                            </div>
+                        </div>
+                        
+                        <form id="holdings-form" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                            <div class="sm:col-span-3">
+                                <label for="ticker-input" class="block text-sm font-medium text-gray-300 mb-2">Stock Ticker(s)</label>
+                                <input type="text" 
+                                       id="ticker-input" 
+                                       placeholder="e.g., AAPL, MSFT, GOOG (comma-separated)" 
+                                       class="input-glow w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all duration-200">
+                            </div>
+                            <button type="submit" class="btn-primary w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                                Add Tickers
+                            </button>
+                        </form>
+
+                        <!-- Popular Suggestions -->
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="text-xs text-gray-500">Popular:</span>
+                            <button onclick="addSuggestedTicker('AAPL')" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-indigo-500 transition-all">AAPL</button>
+                            <button onclick="addSuggestedTicker('MSFT')" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-indigo-500 transition-all">MSFT</button>
+                            <button onclick="addSuggestedTicker('GOOGL')" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-indigo-500 transition-all">GOOGL</button>
+                            <button onclick="addSuggestedTicker('AMZN')" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-indigo-500 transition-all">AMZN</button>
+                            <button onclick="addSuggestedTicker('NVDA')" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-indigo-500 transition-all">NVDA</button>
+                        </div>
+
+                        <div id="holdings-list" class="mt-6 min-h-[60px] p-4 bg-gray-800/30 rounded-xl border border-gray-700/50">
+                            <p id="empty-list-message" class="text-center text-gray-500">Your tickers will appear here...</p>
+                            <div class="flex flex-wrap gap-2" id="ticker-container"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analyze Button -->
+                <div class="mt-12 text-center">
+                    <button id="analyze-button" class="btn-primary px-12 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl text-lg shadow-2xl hover:shadow-green-500/25 transition-all duration-200 transform hover:scale-105 pulse-animation">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            Analyse Portfolio
+                        </span>
+                    </button>
+                    <p class="mt-3 text-sm text-gray-500">Advanced optimisation algorithms • Real-time market data</p>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="mt-16 grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <div class="glass rounded-xl p-6 text-center card-hover">
+                        <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-white mb-2">Efficient Frontier</h3>
+                        <p class="text-sm text-gray-400">Find the optimal risk-return tradeoff for your investments</p>
+                    </div>
+                    <div class="glass rounded-xl p-6 text-center card-hover">
+                        <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-white mb-2">Risk Analysis</h3>
+                        <p class="text-sm text-gray-400">Understand volatility, CVaR, and downside risk metrics</p>
+                    </div>
+                    <div class="glass rounded-xl p-6 text-center card-hover">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-white mb-2">Portfolio Protection</h3>
+                        <p class="text-sm text-gray-400">Minimize drawdowns and optimise for market conditions</p>
+                    </div>
+                </div>
+                
+                <!-- Results Section (Initially Hidden) -->
+                <div id="results-container" class="mt-16 hidden">
+                    <!-- Results content remains the same but with enhanced styling -->
+                    <div class="text-center mb-8 slide-up">
+                        <h2 class="text-3xl font-bold text-white mb-4">Efficient Frontier & Capital Market Line</h2>
+                        <p class="text-gray-400 max-w-3xl mx-auto">
+                            This chart displays optimal portfolios. The curved line is the Efficient Frontier showing the best risk/return combinations. The straight dashed line is the Capital Market Line (CML), representing the best possible risk/return when combining the tangency portfolio with a risk-free asset.
+                        </p>
+                    </div>
+                    <div class="glass rounded-2xl p-8 shadow-2xl slide-up">
+                        <div id="frontier-content-container" class="min-h-[600px] flex items-center justify-center">
+                            <div id="frontier-placeholder" class="text-center">
+                                <p class="text-gray-500">Your chart will be generated here.</p>
+                                <p class="mt-2 text-gray-500 text-sm">Click "Analyse Portfolio" to begin.</p>
+                            </div>
+                            <div id="loader-container" class="hidden flex-col items-center justify-center">
+                                <div class="loader"></div>
+                                <p class="mt-4 text-gray-400">Running optimisations...</p>
+                                <p class="mt-2 text-sm text-gray-500">This may take a few moments...</p>
+                            </div>
+                            <div id="chart-wrapper" class="w-full h-[500px] hidden">
+                                 <canvas id="efficient-frontier-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Portfolios Section -->
+                    <div id="key-portfolios-container" class="hidden mt-12">
+                        <h2 class="text-3xl font-bold text-white text-center mb-8">Optimal Portfolio Allocations</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="min-variance-card" class="glass rounded-2xl p-6 card-hover slide-up">
+                                <h3 class="text-xl font-bold text-white text-center">Minimum Variance Portfolio</h3>
+                                <p class="text-sm text-gray-400 text-center mb-4">(Lowest Risk)</p>
+                                <div class="w-full max-w-[250px] h-auto aspect-square mt-4 mx-auto"><canvas id="min-variance-chart"></canvas></div>
+                                <div id="min-variance-stats" class="mt-4 text-center"></div>
+                                <p class="text-xs text-gray-400 mt-4 text-center max-w-xs mx-auto">This portfolio is designed for maximum safety by minimising volatility. It's a good fit for a conservative investor whose primary goal is capital preservation over high growth.</p>
+                                <div id="min-variance-weights" class="mt-4 w-full text-left text-xs space-y-1"></div>
+                            </div>
+                            <div id="max-sharpe-card" class="glass rounded-2xl p-6 card-hover slide-up" style="animation-delay: 0.1s">
+                                <h3 class="text-xl font-bold text-white text-center">Maximum Sharpe Ratio Portfolio</h3>
+                                <p class="text-sm text-gray-400 text-center mb-4">(Best Risk-Adjusted Return)</p>
+                                <div class="w-full max-w-[250px] h-auto aspect-square mt-4 mx-auto"><canvas id="max-sharpe-chart"></canvas></div>
+                                <div id="max-sharpe-stats" class="mt-4 text-center"></div>
+                                <p class="text-xs text-gray-400 mt-4 text-center max-w-xs mx-auto">This is the tangency portfolio - it offers the best possible return for the amount of risk taken and forms the basis of the Capital Market Line. It's considered the most efficient portfolio.</p>
+                                <div id="max-sharpe-weights" class="mt-4 w-full text-left text-xs space-y-1"></div>
+                            </div>
+                            <div id="max-sortino-card" class="glass rounded-2xl p-6 card-hover slide-up" style="animation-delay: 0.2s">
+                                <h3 class="text-xl font-bold text-white text-center">Maximum Sortino Ratio Portfolio</h3>
+                                <p class="text-sm text-gray-400 text-center mb-4">(Best Downside-Risk Return)</p>
+                                <div class="w-full max-w-[250px] h-auto aspect-square mt-4 mx-auto"><canvas id="max-sortino-chart"></canvas></div>
+                                <div id="max-sortino-stats" class="mt-4 text-center"></div>
+                                <p class="text-xs text-gray-400 mt-4 text-center max-w-xs mx-auto">This portfolio maximizes return against "bad" volatility (downside risk). It's useful for investors who care more about losses than overall volatility.</p>
+                                <div id="max-sortino-weights" class="mt-4 w-full text-left text-xs space-y-1"></div>
+                            </div>
+                            <div id="min-cvar-card" class="glass rounded-2xl p-6 card-hover slide-up" style="animation-delay: 0.3s">
+                                <h3 class="text-xl font-bold text-white text-center">Minimum CVaR Portfolio</h3>
+                                <p class="text-sm text-gray-400 text-center mb-4">(Lowest Tail Risk)</p>
+                                <div class="w-full max-w-[250px] h-auto aspect-square mt-4 mx-auto"><canvas id="min-cvar-chart"></canvas></div>
+                                <div id="min-cvar-stats" class="mt-4 text-center"></div>
+                                <p class="text-xs text-gray-400 mt-4 text-center max-w-xs mx-auto">This portfolio minimises Conditional Value at Risk (CVaR), aiming to reduce the average loss in the worst-case scenarios (e.g., the worst 5% of outcomes). Ideal for highly risk-averse investors.</p>
+                                <div id="min-cvar-weights" class="mt-4 w-full text-left text-xs space-y-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="performance-container" class="hidden mt-12">
+                        <h2 class="text-3xl font-bold text-white text-center mb-4">Performance vs. S&P 500</h2>
+                        <p class="text-gray-400 max-w-3xl mx-auto text-center mb-8">
+                            This chart shows the simulated growth of a £10,000 investment over the past year in the key portfolios compared to the S&P 500 index.
+                        </p>
+                        <div class="glass rounded-2xl p-8 shadow-2xl slide-up">
+                            <canvas id="performance-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="correlation-container" class="hidden mt-12">
+                        <h2 class="text-3xl font-bold text-white text-center mb-4">Asset Correlation Matrix</h2>
+                        <p class="text-gray-400 max-w-3xl mx-auto text-center mb-8">
+                            This heatmap shows the correlation between your selected assets. Low values (green) mean assets move independently, which is good for diversification. High values (red) mean they tend to move together.
+                        </p>
+                        <div class="glass rounded-2xl p-8 shadow-2xl slide-up">
+                            <div id="correlation-matrix-container" class="overflow-x-auto"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Metrics Section -->
+                    <div id="advanced-metrics-container" class="hidden mt-12">
+                        <h2 class="text-3xl font-bold text-white text-center mb-4">Advanced Risk & Performance Metrics</h2>
+                        <p class="text-gray-400 max-w-3xl mx-auto text-center mb-8">
+                            A deeper dive into the risk characteristics and performance attribution of the two primary optimal portfolios.
+                        </p>
+                        
+                        <!-- Tabs for switching between portfolios -->
+                        <div class="mt-6 mb-6 flex justify-center">
+                            <div class="flex p-1 glass rounded-xl">
+                                <button id="adv-tab-maxSharpe" class="px-6 py-3 text-sm font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white transition-all">Max Sharpe</button>
+                                <button id="adv-tab-minVariance" class="px-6 py-3 text-sm font-semibold rounded-lg text-gray-400 hover:bg-gray-700/50 transition-all">Min Variance</button>
+                            </div>
+                        </div>
+
+                        <div id="advanced-metrics-content" class="slide-up">
+                            <!-- This content will be dynamically generated for the selected portfolio -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- CTA Button -->
+            <div class="flex justify-center mt-16 mb-12">
+                <a href="trade.html">
+                    <button class="btn-primary px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-2xl hover:shadow-indigo-500/25 transition-all duration-200 transform hover:scale-105">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                            Learn Trading Strategies
+                        </span>
+                    </button>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900/50 py-12 mt-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <svg class="h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                            </svg>
+                            <span class="text-xl font-bold text-white">InvestED</span>
+                        </div>
+                        <p class="text-gray-400 text-sm">Democratizing financial education through AI-powered learning and professional tools.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Platform</h4>
+                        <ul class="space-y-2">
+                            <li><a href="learn.html" class="text-gray-400 hover:text-white text-sm transition-colors">Learn</a></li>
+                            <li><a href="optimise.html" class="text-gray-400 hover:text-white text-sm transition-colors">Portfolio Optimiser</a></li>
+                            <li><a href="trade.html" class="text-gray-400 hover:text-white text-sm transition-colors">Trading Signals</a></li>
+                            <li><a href="news.html" class="text-gray-400 hover:text-white text-sm transition-colors">Market News</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Resources</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Getting Started</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">FAQ</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Blog</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Support</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Connect</h4>
+                        <div class="flex space-x-4 mb-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/></svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            </a>
+                        </div>
+                        <p class="text-gray-400 text-sm">contact@invested.app</p>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                    <p class="text-gray-500 text-sm">© 2025 InvestED. All rights reserved. | <a href="#" class="hover:text-white transition-colors">Privacy Policy</a> | <a href="#" class="hover:text-white transition-colors">Terms of Service</a></p>
+                </div>
+            </div>
+        </footer>
+
+    <script>
+        // --- Global Chart Styling ---
+        Chart.defaults.font.family = "'Space Mono', monospace";
+        Chart.defaults.color = '#e0e7ff';
+
+        // --- UI Element References ---
+        const holdingsForm = document.getElementById('holdings-form');
+        const tickerInput = document.getElementById('ticker-input');
+        const holdingsList = document.getElementById('holdings-list');
+        const emptyListMessage = document.getElementById('empty-list-message');
+        const tickerContainer = document.getElementById('ticker-container');
+        const analyzeButton = document.getElementById('analyze-button');
+        const resultsContainer = document.getElementById('results-container');
+        const frontierPlaceholder = document.getElementById('frontier-placeholder');
+        const loaderContainer = document.getElementById('loader-container');
+        const chartWrapper = document.getElementById('chart-wrapper');
+        const keyPortfoliosContainer = document.getElementById('key-portfolios-container');
+        const performanceContainer = document.getElementById('performance-container');
+        const correlationContainer = document.getElementById('correlation-container');
+        
+        // Advanced Metrics UI References
+        const advancedMetricsContainer = document.getElementById('advanced-metrics-container');
+        const advancedMetricsContent = document.getElementById('advanced-metrics-content');
+        const advTabMaxSharpe = document.getElementById('adv-tab-maxSharpe');
+        const advTabMinVariance = document.getElementById('adv-tab-minVariance');
+
+        // --- Chart Instance Variables ---
+        let minVarianceChart, maxSharpeChart, maxSortinoChart, minCvarChart, efficientFrontierChart, performanceChart = null;
+        let drawdownChart, betaChart, alphaChart = null; // Advanced chart instances
+        let holdings = new Set();
+        let currentResultsData = null; // To store the full results
+        
+        // --- Event Listeners ---
+        holdingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const tickers = tickerInput.value.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+            tickers.forEach(ticker => {
+                if (!holdings.has(ticker)) {
+                    holdings.add(ticker);
+                    addTickerToDOM(ticker);
+                }
+            });
+            tickerInput.value = '';
+            updateAnalyzeButton();
+        });
+        
+        holdingsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-btn')) {
+                const tickerToRemove = e.target.dataset.ticker;
+                holdings.delete(tickerToRemove);
+                e.target.parentElement.remove();
+                if (holdings.size === 0) {
+                    emptyListMessage.style.display = 'block';
+                    tickerContainer.style.display = 'none';
+                }
+                updateAnalyzeButton();
+            }
+        });
+
+        analyzeButton.addEventListener('click', runOptimization);
+
+        // Event listeners for advanced metrics tabs
+        advTabMaxSharpe.addEventListener('click', () => switchAdvancedTab('maxSharpe'));
+        advTabMinVariance.addEventListener('click', () => switchAdvancedTab('minVariance'));
+
+        // Function to add suggested ticker
+        function addSuggestedTicker(ticker) {
+            if (!holdings.has(ticker)) {
+                holdings.add(ticker);
+                addTickerToDOM(ticker);
+                updateAnalyzeButton();
+            }
+        }
+
+        function addTickerToDOM(ticker) {
+            if (emptyListMessage) {
+                emptyListMessage.style.display = 'none';
+                tickerContainer.style.display = 'flex';
+            }
+            const tickerTag = document.createElement('div');
+            tickerTag.className = 'ticker-tag bg-gradient-to-r from-indigo-600/50 to-purple-600/50 text-white text-sm font-semibold px-4 py-2 rounded-full flex items-center justify-between gap-2 hover:from-indigo-600/70 hover:to-purple-600/70 transition-all';
+            tickerTag.innerHTML = `
+                <span>${ticker}</span>
+                <button data-ticker="${ticker}" class="remove-btn text-white/80 hover:text-white text-lg font-bold ml-2">&times;</button>
+            `;
+            tickerContainer.appendChild(tickerTag);
+        }
+
+        function updateAnalyzeButton() {
+            if (holdings.size >= 2) {
+                analyzeButton.classList.remove('pulse-animation');
+                analyzeButton.classList.add('shadow-green-500/50');
+            } else {
+                analyzeButton.classList.add('pulse-animation');
+                analyzeButton.classList.remove('shadow-green-500/50');
+            }
+        }
+
+        async function runOptimization() {
+            if (holdings.size < 2) {
+                alert('Please add at least two stock tickers to optimize.');
+                return;
+            }
+            
+            resultsContainer.classList.remove('hidden');
+            frontierPlaceholder.classList.add('hidden');
+            chartWrapper.classList.add('hidden');
+            loaderContainer.classList.remove('hidden');
+            loaderContainer.classList.add('flex');
+            
+            // Smooth scroll to results
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            try {
+                const tickersArray = Array.from(holdings);
+                const results = await getOptimalPortfolioFromBackend(tickersArray);
+                
+                if (!results || !results.advancedMetrics) {
+                    throw new Error("Received invalid or incomplete data from the optimization server.");
+                }
+                currentResultsData = results; // Store full results
+                displayResults(results);
+
+            } catch (error) {
+                console.error("Optimization Error:", error);
+                loaderContainer.classList.add('hidden');
+                frontierPlaceholder.classList.remove('hidden');
+                frontierPlaceholder.innerHTML = `<p class="text-red-400 text-center">An error occurred: ${error.message}</p>`;
+            }
+        }
+        
+        async function getOptimalPortfolioFromBackend(tickers) {
+            const serverUrl = 'http://127.0.0.1:5000/optimize-portfolio';
+            const response = await fetch(serverUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tickers: tickers })
+            });
+            if (!response.ok) {
+                 const errorBody = await response.json();
+                 throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+            }
+            return await response.json();
+        }
+        
+        function displayResults(results) {
+            loaderContainer.classList.add('hidden');
+             resultsContainer.classList.remove('hidden');
+            chartWrapper.classList.remove('hidden');
+            keyPortfoliosContainer.classList.remove('hidden');
+            performanceContainer.classList.remove('hidden');
+            correlationContainer.classList.remove('hidden');
+            advancedMetricsContainer.classList.remove('hidden'); // Show the new section
+            
+            minVarianceChart = createPieChart('min-variance-chart', minVarianceChart, results.minVariance);
+            maxSharpeChart = createPieChart('max-sharpe-chart', maxSharpeChart, results.maxSharpe);
+            maxSortinoChart = createPieChart('max-sortino-chart', maxSortinoChart, results.maxSortino);
+            minCvarChart = createPieChart('min-cvar-chart', minCvarChart, results.minCVaR);
+
+            document.getElementById('min-variance-stats').innerHTML = formatStats(results.minVariance, 'default');
+            document.getElementById('max-sharpe-stats').innerHTML = formatStats(results.maxSharpe, 'default');
+            document.getElementById('max-sortino-stats').innerHTML = formatStats(results.maxSortino, 'sortino');
+            document.getElementById('min-cvar-stats').innerHTML = formatStats(results.minCVaR, 'cvar');
+            
+            renderWeightsList('min-variance-weights', results.minVariance);
+            renderWeightsList('max-sharpe-weights', results.maxSharpe);
+            renderWeightsList('max-sortino-weights', results.maxSortino);
+            renderWeightsList('min-cvar-weights', results.minCVaR);
+
+            efficientFrontierChart = createEfficientFrontierChart(results, efficientFrontierChart);
+            performanceChart = createPerformanceChart(results.performance, performanceChart);
+            displayCorrelationMatrix(results.correlationMatrix);
+
+            // Initial display for advanced metrics (default to Max Sharpe)
+            switchAdvancedTab('maxSharpe');
+        }
+
+        // Function to switch between advanced metric views
+        function switchAdvancedTab(portfolioType) {
+            if (!currentResultsData) return;
+
+            // Update tab styles
+            if (portfolioType === 'maxSharpe') {
+                advTabMaxSharpe.classList.add('bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'text-white');
+                advTabMaxSharpe.classList.remove('text-gray-400', 'hover:bg-gray-700/50');
+                advTabMinVariance.classList.remove('bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'text-white');
+                advTabMinVariance.classList.add('text-gray-400', 'hover:bg-gray-700/50');
+            } else {
+                advTabMinVariance.classList.add('bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'text-white');
+                advTabMinVariance.classList.remove('text-gray-400', 'hover:bg-gray-700/50');
+                advTabMaxSharpe.classList.remove('bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'text-white');
+                advTabMaxSharpe.classList.add('text-gray-400', 'hover:bg-gray-700/50');
+            }
+            
+            const portfolioMetrics = currentResultsData.advancedMetrics[portfolioType];
+            const originalPortfolioData = currentResultsData[portfolioType];
+            
+            // Generate the content for the selected tab
+            advancedMetricsContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column: Drawdown Chart and Scorecards -->
+                    <div class="flex flex-col gap-8">
+                        <div class="glass rounded-2xl p-6 card-hover">
+                            <h4 class="text-lg font-bold text-white">Historical Drawdown</h4>
+                            <p class="text-xs text-gray-400 mt-1">Percentage drop from a portfolio's peak value.</p>
+                            <div class="h-64 mt-4"><canvas id="drawdown-chart"></canvas></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="glass rounded-xl p-6 text-center">
+                                <h4 class="text-lg font-bold text-white">Max Drawdown</h4>
+                                <p class="text-4xl font-bold mt-2 text-red-400">${(portfolioMetrics.maxDrawdown * 100).toFixed(2)}%</p>
+                                <p class="text-xs text-gray-400 mt-1">Largest single drop</p>
+                            </div>
+                            <div class="glass rounded-xl p-6 text-center">
+                                <h4 class="text-lg font-bold text-white">Calmar Ratio</h4>
+                                <p class="text-4xl font-bold mt-2 text-green-400">${portfolioMetrics.calmarRatio.toFixed(2)}</p>
+                                <p class="text-xs text-gray-400 mt-1">Return vs. Drawdown</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right Column: Beta and Alpha Charts -->
+                    <div class="flex flex-col gap-8">
+                        <div class="glass rounded-2xl p-6 card-hover">
+                            <h4 class="text-lg font-bold text-white">Portfolio Beta</h4>
+                            <p class="text-xs text-gray-400 mt-1">Volatility relative to the S&P 500 (market).</p>
+                            <div class="h-48 mt-4"><canvas id="beta-chart"></canvas></div>
+                        </div>
+                        <div class="glass rounded-2xl p-6 card-hover">
+                            <h4 class="text-lg font-bold text-white">Jensen's Alpha</h4>
+                            <p class="text-xs text-gray-400 mt-1">Performance beyond what was expected for the risk taken.</p>
+                            <div class="h-48 mt-4"><canvas id="alpha-chart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Create the new charts
+            drawdownChart = createDrawdownChart(portfolioMetrics.drawdownSeries, drawdownChart);
+            betaChart = createBetaChart(portfolioMetrics.beta, betaChart);
+            alphaChart = createAlphaChart(portfolioMetrics.jensensAlpha, originalPortfolioData.returns, portfolioMetrics.beta, currentResultsData.riskFreeRate, alphaChart);
+        }
+        
+        // --- Chart Creation Functions (remain the same) ---
+        function createPieChart(canvasId, chartInstance, portfolioData) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: portfolioData.weights.map(w => w.ticker),
+                    datasets: [{
+                        data: portfolioData.weights.map(w => w.weight),
+                        backgroundColor: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff', '#a78bfa', '#c4b5fd'],
+                        borderColor: '#1e293b'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+        
+        function formatStats(portfolio, type = 'default') {
+            let statsHtml = `
+                <p class="text-sm text-gray-400 mt-2">Return: <span class="font-bold text-green-400">${(portfolio.returns * 100).toFixed(2)}%</span></p>
+                <p class="text-sm text-gray-400">Volatility: <span class="font-bold text-yellow-400">${(portfolio.volatility * 100).toFixed(2)}%</span></p>
+                <p class="text-sm text-gray-400">Sharpe Ratio: <span class="font-bold text-blue-400">${portfolio.sharpeRatio.toFixed(2)}</span></p>
+            `;
+            if (type === 'sortino') statsHtml += `<p class="text-sm text-gray-400">Sortino Ratio: <span class="font-bold text-teal-400">${portfolio.sortinoRatio.toFixed(2)}</span></p>`;
+            if (type === 'cvar') statsHtml += `<p class="text-sm text-gray-400">CVaR (95%): <span class="font-bold text-red-400">${(portfolio.cvar * 100).toFixed(2)}%</span></p>`;
+            return statsHtml;
+        }
+
+        function renderWeightsList(containerId, portfolioData) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<h4 class="font-bold text-sm mb-2 text-indigo-300">Composition:</h4>';
+            portfolioData.weights.filter(w => w.weight > 0.001).sort((a, b) => b.weight - a.weight).forEach(w => {
+                const weightEl = document.createElement('div');
+                weightEl.className = 'flex justify-between items-center p-2 rounded hover:bg-gray-700/30 transition-colors';
+                weightEl.innerHTML = `<span class="text-gray-300">${w.ticker}</span><span class="font-semibold text-white">${(w.weight * 100).toFixed(2)}%</span>`;
+                container.appendChild(weightEl);
+            });
+        }
+        
+        function createEfficientFrontierChart(results, chartInstance) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('efficient-frontier-chart').getContext('2d');
+            const datasets = [];
+            
+            if (results.randomPortfolios && results.randomPortfolios.length > 0) {
+                const sharpeRatios = results.randomPortfolios.map(p => p[2]);
+                const minSharpe = Math.min(...sharpeRatios);
+                const maxSharpe = Math.max(...sharpeRatios);
+                datasets.push({ type: 'scatter', label: 'Random Portfolios', data: results.randomPortfolios.map(p => ({ x: p[1], y: p[0] })), backgroundColor: results.randomPortfolios.map(p => getSharpeRatioColor(p[2], minSharpe, maxSharpe)), pointRadius: 3.5, pointHoverRadius: 5, order: 5 });
+            }
+            if (results.individualAssets && results.individualAssets.length > 0) {
+                datasets.push({ type: 'scatter', label: 'Individual Assets', data: results.individualAssets.map(a => ({ x: a.volatility, y: a.return })), backgroundColor: 'rgba(248, 113, 113, 1)', pointRadius: 10, pointHoverRadius: 12, pointStyle: 'rectRot', borderColor: 'rgba(255, 255, 255, 1)', borderWidth: 3, order: 2 });
+            }
+            if (results.efficientFrontier && results.efficientFrontier.length > 0) {
+                const sortedFrontier = results.efficientFrontier.sort((a, b) => a[1] - b[1]);
+                datasets.push({ type: 'line', label: 'Efficient Frontier', data: sortedFrontier.map(p => ({ x: p[1], y: p[0] })), borderColor: 'rgba(147, 197, 253, 1)', borderWidth: 5, fill: false, tension: 0.3, pointRadius: 0, order: 4 });
+            }
+            const allVols = [...results.randomPortfolios.map(p => p[1]), ...results.individualAssets.map(a => a.volatility), results.minVariance.volatility, results.maxSharpe.volatility, ...(results.efficientFrontier ? results.efficientFrontier.map(p => p[1]) : [])];
+            const allRets = [...results.randomPortfolios.map(p => p[0]), ...results.individualAssets.map(a => a.return), results.minVariance.returns, results.maxSharpe.returns, ...(results.efficientFrontier ? results.efficientFrontier.map(p => p[0]) : [])];
+            if (results.riskFreeRate !== undefined) allRets.push(results.riskFreeRate);
+            const minVol = Math.max(0, Math.min(...allVols) * 0.95);
+            const maxVol = Math.max(...allVols) * 1.05;
+            const minRet = Math.min(...allRets) * 0.99;
+            const maxRet = Math.max(...allRets) * 1.05;
+            if (results.riskFreeRate !== undefined && results.maxSharpe) {
+                const cmlSlope = (results.maxSharpe.returns - results.riskFreeRate) / results.maxSharpe.volatility;
+                const cmlEndVol = Math.min(maxVol, results.maxSharpe.volatility * 1.3);
+                datasets.push({ type: 'line', label: 'Capital Market Line (CML)', data: [ { x: 0, y: results.riskFreeRate }, { x: cmlEndVol, y: results.riskFreeRate + cmlSlope * cmlEndVol } ], borderColor: 'rgba(255, 255, 255, 1)', borderWidth: 4, borderDash: [10, 5], fill: false, pointRadius: 0, order: 3 });
+            }
+            datasets.push({ type: 'scatter', label: 'Min Variance', data: [{ x: results.minVariance.volatility, y: results.minVariance.returns }], backgroundColor: 'rgba(251, 191, 36, 1)', pointRadius: 12, pointStyle: 'circle', borderColor: '#fff', borderWidth: 4, order: 1 }, { type: 'scatter', label: 'Max Sharpe', data: [{ x: results.maxSharpe.volatility, y: results.maxSharpe.returns }], backgroundColor: 'rgba(34, 197, 94, 1)', pointRadius: 15, pointStyle: 'triangle', borderColor: '#fff', borderWidth: 4, order: 1 });
+            return new Chart(ctx, { type: 'scatter', data: { datasets }, options: { responsive: true, maintainAspectRatio: false, onClick: (e) => { const points = e.chart.getElementsAtEventForMode(e, 'point', { intersect: true }, true); if (points.length) { const label = e.chart.data.datasets[points[0].datasetIndex].label; let cardId = ''; if (label === 'Min Variance') cardId = 'min-variance-card'; else if (label === 'Max Sharpe') cardId = 'max-sharpe-card'; if (cardId) document.getElementById(cardId).scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, scales: { x: { min: minVol, max: maxVol, title: { display: true, text: 'Volatility (Risk)', font: { size: 16, weight: 'bold' } }, ticks: { callback: v => `${(v * 100).toFixed(1)}%` } }, y: { min: minRet, max: maxRet, title: { display: true, text: 'Expected Return', font: { size: 16, weight: 'bold' } }, ticks: { callback: v => `${(v * 100).toFixed(0)}%` } } }, plugins: { legend: { labels: { usePointStyle: true, font: { size: 13, weight: 'bold' } } }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; const point = context.raw; if (context.dataset.label === 'Individual Assets') { const asset = results.individualAssets[context.dataIndex]; label = asset.ticker; } return `${label}: ${(point.x * 100).toFixed(2)}% risk, ${(point.y * 100).toFixed(2)}% return`; } } } } } });
+        }
+        
+        function createPerformanceChart(performanceData, chartInstance) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            return new Chart(ctx, { type: 'line', data: { labels: performanceData.dates, datasets: [ { label: 'Max Sharpe Portfolio', data: performanceData.maxSharpe.map(p => p * 10000), borderColor: 'rgba(79, 70, 229, 1)', backgroundColor: 'rgba(79, 70, 229, 0.2)', fill: true, tension: 0.1, pointRadius: 0 }, { label: 'Min Variance Portfolio', data: performanceData.minVariance.map(p => p * 10000), borderColor: 'rgba(250, 204, 21, 1)', backgroundColor: 'rgba(250, 204, 21, 0.2)', fill: true, tension: 0.1, pointRadius: 0 }, { label: 'S&P 500 (SPY)', data: performanceData.sp500.map(p => p * 10000), borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.2)', fill: true, tension: 0.1, pointRadius: 0 } ] }, options: { responsive: true, scales: { x: { type: 'time', time: { unit: 'month' }, grid: { display: false } }, y: { title: { display: true, text: 'Portfolio Value (£)' }, ticks: { callback: value => `£${value.toLocaleString()}` } } }, plugins: { legend: { labels: { color: '#e0e7ff' } }, tooltip: { callbacks: { label: function(context) { return `${context.dataset.label}: £${parseFloat(context.raw).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; } } } } } });
+        }
+
+        // Advanced Metrics Charting Functions
+        function createDrawdownChart(drawdownData, chartInstance) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('drawdown-chart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: drawdownData.dates,
+                    datasets: [{
+                        label: 'Drawdown',
+                        data: drawdownData.values.map(v => v * 100),
+                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.3)',
+                        fill: true,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'time', time: { unit: 'month' }, grid: { display: false }, ticks: { display: false } },
+                        y: { ticks: { callback: value => `${value.toFixed(0)}%` }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `Drawdown: ${c.raw.toFixed(2)}%` } } }
+                }
+            });
+        }
+
+        function createBetaChart(betaValue, chartInstance) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('beta-chart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Portfolio Beta'],
+                    datasets: [{
+                        label: 'Beta',
+                        data: [betaValue],
+                        backgroundColor: betaValue > 1.1 ? 'rgba(239, 68, 68, 0.7)' : betaValue < 0.9 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(250, 204, 21, 0.7)',
+                        borderColor: betaValue > 1.1 ? 'rgba(239, 68, 68, 1)' : betaValue < 0.9 ? 'rgba(34, 197, 94, 1)' : 'rgba(250, 204, 21, 1)',
+                        borderWidth: 2,
+                        barThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { 
+                        x: { grid: { display: false } }, 
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' }, suggestedMax: Math.max(1.5, betaValue * 1.2) } 
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (c) => `Beta: ${c.raw.toFixed(2)}` } }
+                    }
+                }
+            });
+        }
+
+        function createAlphaChart(alphaValue, portfolioReturn, beta, riskFreeRate, chartInstance) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('alpha-chart').getContext('2d');
+            const expectedReturn = riskFreeRate + beta * (portfolioReturn - riskFreeRate);
+            const alphaPercent = alphaValue * 100;
+            const returnPercent = portfolioReturn * 100;
+            const expectedReturnPercent = expectedReturn * 100;
+
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Actual vs. Expected Return'],
+                    datasets: [
+                        { label: 'Actual Return', data: [returnPercent], backgroundColor: 'rgba(79, 70, 229, 0.7)', borderWidth: 2, borderColor: 'rgba(79, 70, 229, 1)' },
+                        { label: 'Expected Return (CAPM)', data: [expectedReturnPercent], backgroundColor: 'rgba(250, 204, 21, 0.7)', borderWidth: 2, borderColor: 'rgba(250, 204, 21, 1)' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { 
+                        x: { grid: { display: false } }, 
+                        y: { title: { display: true, text: 'Annualized Return (%)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw.toFixed(2)}%` } },
+                        subtitle: { display: true, text: `Jensen's Alpha: ${alphaPercent.toFixed(2)}%`, color: alphaPercent > 0 ? '#22c55e' : '#ef4444', font: { size: 14, weight: 'bold' }, padding: { bottom: 10 } }
+                    }
+                }
+            });
+        }
+
+        function getSharpeRatioColor(sharpe, minSharpe, maxSharpe) {
+            const ratio = Math.max(0, Math.min(1, (sharpe - minSharpe) / (maxSharpe - minSharpe)));
+            const startColor = { r: 250, g: 204, b: 21 }, midColor = { r: 20, g: 184, b: 166 }, endColor = { r: 59, g: 130, b: 246 };
+            let r, g, b;
+            if (ratio < 0.5) { const localRatio = ratio * 2; r = Math.round(startColor.r + (midColor.r - startColor.r) * localRatio); g = Math.round(startColor.g + (midColor.g - startColor.g) * localRatio); b = Math.round(startColor.b + (midColor.b - startColor.b) * localRatio); } else { const localRatio = (ratio - 0.5) * 2; r = Math.round(midColor.r + (endColor.r - midColor.r) * localRatio); g = Math.round(midColor.g + (endColor.g - midColor.g) * localRatio); b = Math.round(midColor.b + (endColor.b - midColor.b) * localRatio); }
+            return `rgba(${r}, ${g}, ${b}, 0.6)`;
+        }
+        
+        function displayCorrelationMatrix(matrix) {
+            const container = document.getElementById('correlation-matrix-container');
+            if (!matrix || Object.keys(matrix).length === 0) { container.innerHTML = '<p class="text-gray-500 text-center">No correlation data available.</p>'; return; }
+            const tickers = Object.keys(matrix);
+            let html = '<table class="min-w-full text-xs text-center"><thead><tr><th></th>';
+            tickers.forEach(ticker => { html += `<th class="px-2 py-1 border border-gray-700">${ticker}</th>`; });
+            html += '</tr></thead><tbody>';
+            tickers.forEach(rowTicker => { html += `<tr><th class="px-2 py-1 border border-gray-700">${rowTicker}</th>`; tickers.forEach(colTicker => { const value = matrix[rowTicker][colTicker]; const color = value < 0.3 ? '#22c55e' : value > 0.7 ? '#ef4444' : '#facc15'; html += `<td class="px-2 py-1 border border-gray-700" style="background:${color};color:#18181b;">${value.toFixed(2)}</td>`; }); html += '</tr>'; });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+            

@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvestED - Trading Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts: Space Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Animated background from optimise page */
+      body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    z-index: -1;
+    animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(-20px, -20px) rotate(1deg); }
+    66% { transform: translate(20px, -10px) rotate(-1deg); }
+}
+
+/* Floating dots background */
+.dot {
+    position: fixed;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.3);
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes drift {
+    from {
+        transform: translateY(100vh) translateX(0);
+    }
+    to {
+        transform: translateY(-10vh) translateX(100px);
+    }
+}
+
+/* Enhanced glassmorphism */
+.glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Card hover effect */
+.card-hover {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Button ripple effect */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Enhanced loader with new animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Result card animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease-out;
+}
+
+/* Animated gradient background enhancement */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0c0a1e 0%, #1a1832 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #6366f1;
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .glass-effect {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        .signal-card {
+            transition: all 0.3s ease;
+        }
+        .signal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .preset-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .preset-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.3);
+        }
+        .preset-card.selected {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+        }
+        .stock-row:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(31, 41, 55, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+        
+        /* Tab navigation */
+        .main-tab {
+            transition: all 0.3s ease;
+        }
+        .main-tab.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+    <!-- Floating background elements -->
+<div class="dot w-2 h-2" style="left: 10%; animation: drift 15s infinite linear;"></div>
+<div class="dot w-3 h-3" style="left: 30%; animation: drift 20s infinite linear; animation-delay: 3s;"></div>
+<div class="dot w-2 h-2" style="left: 50%; animation: drift 18s infinite linear; animation-delay: 6s;"></div>
+<div class="dot w-3 h-3" style="left: 70%; animation: drift 22s infinite linear; animation-delay: 9s;"></div>
+<div class="dot w-2 h-2" style="left: 90%; animation: drift 17s infinite linear; animation-delay: 12s;"></div>
+<div class="dot w-1 h-1" style="left: 15%; animation: drift 25s infinite linear; animation-delay: 2s;"></div>
+<div class="dot w-4 h-4" style="left: 85%; animation: drift 20s infinite linear; animation-delay: 7s; opacity: 0.2;"></div>
+<div class="dot w-2 h-2" style="left: 45%; animation: drift 18s infinite linear; animation-delay: 10s;"></div>
+
+    <!-- Header / Navigation Bar -->
+    <header class="w-full py-5 px-4 sm:px-6 lg:px-8 z-50 glass sticky top-0">
+        <div class="max-w-7xl mx-auto">
+            <nav class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <svg class="h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.77 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                    </svg>
+                    <a href="index.html" class="text-2xl font-bold text-white">InvestED</a>
+                </div>
+
+                <!-- Navigation Links (Desktop) -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="wwa.html" class="text-gray-300 hover:text-white transition-colors duration-200">Who We Are</a>
+                    <a href="learn.html" class="text-gray-300 hover:text-white transition-colors duration-200">Learn</a>
+                    <a href="optimise.html" class="text-gray-300 hover:text-white transition-colors duration-200">Optimise</a>
+                    <a href="#" class="font-semibold text-white">Trading</a>
+                    <a href="news.html" class="text-gray-300 hover:text-white transition-colors duration-200">Reports</a>
+                </div>
+
+                <!-- Log In Link -->
+                <div class="hidden md:block">
+                    <a href="#" class="flex items-center text-gray-300 hover:text-white transition-colors duration-200">
+                        <span>Log in</span>
+                        <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <section class="py-12 sm:py-16">
+            <div class="max-w-7xl mx-auto px-4">
+                <!-- Hero Section -->
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-white mb-4">
+                        Trading Dashboard
+                    </h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-400">
+                        Screen stocks and analyze trading signals with advanced technical indicators
+                    </p>
+                </div>
+
+                <!-- Main Tab Navigation -->
+                <div class="flex justify-center mb-8">
+                    <div class="inline-flex rounded-lg glass-effect p-1">
+                        <button onclick="switchMainView('signals')" id="main-tab-signals" class="main-tab active px-6 py-3 rounded-lg text-white font-medium transition-all">
+                            📊 Trading Signals
+                        </button>
+                        <button onclick="switchMainView('screener')" id="main-tab-screener" class="main-tab px-6 py-3 rounded-lg text-gray-300 font-medium transition-all">
+                            🔍 Market Screener
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TRADING SIGNALS VIEW -->
+                <div id="signals-view">
+                    <!-- Quick Stats Bar -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+                        <div class="glass-effect rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-indigo-400" id="total-signals">0</div>
+                            <div class="text-sm text-gray-400">Total Signals</div>
+                        </div>
+                        <div class="glass-effect rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-green-400" id="buy-signals">0</div>
+                            <div class="text-sm text-gray-400">Buy Signals</div>
+                        </div>
+                        <div class="glass-effect rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-red-400" id="sell-signals">0</div>
+                            <div class="text-sm text-gray-400">Sell Signals</div>
+                        </div>
+                        <div class="glass-effect rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-yellow-400" id="hold-signals">0</div>
+                            <div class="text-sm text-gray-400">Hold Signals</div>
+                        </div>
+                    </div>
+
+                    <!-- Educational Tabs -->
+                <div class="mb-12">
+                    <div class="flex space-x-1 mb-6">
+                        <button onclick="showTab('indicators')" id="tab-indicators" class="tab-btn px-4 py-2 bg-indigo-600 text-white rounded-l-lg transition-colors">Indicators</button>
+                        <button onclick="showTab('strategies')" id="tab-strategies" class="tab-btn px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors">Strategies</button>
+                        <button onclick="showTab('risk')" id="tab-risk" class="tab-btn px-4 py-2 bg-gray-700 text-gray-300 hover:bg-gray-600 rounded-r-lg transition-colors">Risk Management</button>
+                    </div>
+                    
+                    <!-- Tab Content -->
+                    <div id="content-indicators" class="tab-content glass-effect rounded-lg p-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">Understanding Technical Indicators</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">📊 Moving Averages (MA)</h3>
+                                <p class="text-sm text-gray-400 mb-2">Smooth out price action to identify trends. The 50-day and 200-day MAs are widely watched.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Golden Cross:</strong> 50MA > 200MA = Bullish<br>
+                                    <strong>Death Cross:</strong> 50MA < 200MA = Bearish
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">📈 RSI (14-period)</h3>
+                                <p class="text-sm text-gray-400 mb-2">Momentum oscillator measuring price change velocity on a 0-100 scale.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>&gt;70:</strong> Overbought (potential reversal)<br>
+                                    <strong>&lt;30:</strong> Oversold (potential bounce)<br>
+                                    <strong>30-70:</strong> Neutral zone
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">📉 MACD</h3>
+                                <p class="text-sm text-gray-400 mb-2">Shows relationship between two moving averages to identify momentum shifts.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Signal Line Cross:</strong> Entry/Exit points<br>
+                                    <strong>Zero Line Cross:</strong> Trend confirmation<br>
+                                    <strong>Divergence:</strong> Potential reversal
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">🎯 Bollinger Bands</h3>
+                                <p class="text-sm text-gray-400 mb-2">Volatility indicator showing overbought/oversold levels dynamically.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Price at Upper Band:</strong> Overbought<br>
+                                    <strong>Price at Lower Band:</strong> Oversold<br>
+                                    <strong>Band Squeeze:</strong> Low volatility, breakout pending
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">💹 Volume</h3>
+                                <p class="text-sm text-gray-400 mb-2">Confirms price movements and trend strength.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Rising Price + Volume:</strong> Strong trend<br>
+                                    <strong>Rising Price - Volume:</strong> Weak trend<br>
+                                    <strong>Volume Spike:</strong> Potential reversal
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">🔄 Stochastic</h3>
+                                <p class="text-sm text-gray-400 mb-2">Compares closing price to price range over time.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>&gt;80:</strong> Overbought territory<br>
+                                    <strong>&lt;20:</strong> Oversold territory<br>
+                                    <strong>%K/%D Cross:</strong> Signal confirmation
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="content-strategies" class="tab-content glass-effect rounded-lg p-6 hidden">
+                        <h2 class="text-2xl font-bold text-white mb-4">Trading Strategies for Beginners</h2>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-green-400 mb-2">🎯 Trend Following</h3>
+                                <p class="text-sm text-gray-400 mb-2">Trade in the direction of the prevailing trend. "The trend is your friend."</p>
+                                <ul class="text-xs text-gray-300 space-y-1 ml-4">
+                                    <li>• Use moving averages to identify trend direction</li>
+                                    <li>• Enter on pullbacks in uptrends, rallies in downtrends</li>
+                                    <li>• Exit when trend indicators show reversal signals</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-yellow-400 mb-2">⚡ Mean Reversion</h3>
+                                <p class="text-sm text-gray-400 mb-2">Trade based on the assumption that prices return to their average.</p>
+                                <ul class="text-xs text-gray-300 space-y-1 ml-4">
+                                    <li>• Buy when RSI < 30 (oversold)</li>
+                                    <li>• Sell when RSI > 70 (overbought)</li>
+                                    <li>• Use Bollinger Bands for entry/exit points</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-blue-400 mb-2">🔄 Swing Trading</h3>
+                                <p class="text-sm text-gray-400 mb-2">Capture short to medium-term gains over days to weeks.</p>
+                                <ul class="text-xs text-gray-300 space-y-1 ml-4">
+                                    <li>• Combine multiple indicators for confirmation</li>
+                                    <li>• Look for support/resistance levels</li>
+                                    <li>• Use stop-losses to manage risk</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="content-risk" class="tab-content glass-effect rounded-lg p-6 hidden">
+                        <h2 class="text-2xl font-bold text-white mb-4">Risk Management Essentials</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-red-400 mb-2">⚠️ Position Sizing</h3>
+                                <p class="text-sm text-gray-400 mb-2">Never risk more than 1-2% of your capital on a single trade.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Formula:</strong> Position Size = (Account Risk %) / (Trade Risk %)<br>
+                                    <strong>Example:</strong> $10,000 account, 1% risk = $100 max loss per trade
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-orange-400 mb-2">🛡️ Stop-Loss Orders</h3>
+                                <p class="text-sm text-gray-400 mb-2">Automatically exit losing positions to limit losses.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>ATR Method:</strong> Set stop at 2x Average True Range<br>
+                                    <strong>Percentage:</strong> 5-10% below entry for stocks<br>
+                                    <strong>Support Level:</strong> Just below key support
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-purple-400 mb-2">📊 Risk/Reward Ratio</h3>
+                                <p class="text-sm text-gray-400 mb-2">Aim for at least 1:2 risk/reward ratio on all trades.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Good Trade:</strong> Risk $100 to make $200+<br>
+                                    <strong>Bad Trade:</strong> Risk $100 to make $50
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-800/50 rounded-lg">
+                                <h3 class="font-bold text-indigo-400 mb-2">📈 Diversification</h3>
+                                <p class="text-sm text-gray-400 mb-2">Spread risk across different assets and sectors.</p>
+                                <div class="mt-2 p-2 bg-gray-900/50 rounded text-xs">
+                                    <strong>Rule:</strong> No more than 20% in one sector<br>
+                                    <strong>Minimum:</strong> 5-10 different positions
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                    <!-- Signals Input Form -->
+                    <div class="glass-effect rounded-lg p-8 mb-12">
+                        <form id="signals-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="ticker-input" class="block text-sm font-medium text-gray-300 mb-2">
+                                        Stock Tickers
+                                    </label>
+                                    <input type="text" 
+                                           id="ticker-input" 
+                                           placeholder="e.g., AAPL, TSLA, NVDA" 
+                                           required 
+                                           class="w-full bg-gray-800/50 border border-gray-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p class="mt-1 text-xs text-gray-500">Enter comma-separated stock symbols</p>
+                                </div>
+                                <div>
+                                    <label for="timeframe-select" class="block text-sm font-medium text-gray-300 mb-2">
+                                        Analysis Timeframe
+                                    </label>
+                                    <select id="timeframe-select" 
+                                            class="w-full bg-gray-800/50 border border-gray-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="short">Short-term (Daily)</option>
+                                        <option value="medium" selected>Medium-term (Weekly)</option>
+                                        <option value="long">Long-term (Monthly)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex justify-center">
+                                <button type="submit" 
+                                        class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-md transition-all duration-200 transform hover:scale-105">
+                                    Analyze Signals
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Signals Results Container -->
+                    <div id="signals-results-container" class="hidden">
+                        <div id="signals-loader-container" class="flex flex-col items-center justify-center min-h-[300px]">
+                            <div class="loader mb-4"></div>
+                            <p class="text-gray-400 pulse-animation">Analyzing market data...</p>
+                        </div>
+                        
+                        <div id="signals-output" class="hidden space-y-8">
+                            <!-- Dynamic content will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MARKET SCREENER VIEW -->
+                <div id="screener-view" class="hidden">
+                    <!-- Preset Screeners -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-white mb-4">Quick Screeners</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3" id="preset-container">
+                            <!-- Presets will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Custom Filters Section -->
+                    <div class="glass-effect rounded-lg p-6 mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-white">Custom Filters</h2>
+                            <button onclick="toggleFilters()" class="text-indigo-400 hover:text-indigo-300 text-sm">
+                                <span id="toggle-text">Show Filters ▼</span>
+                            </button>
+                        </div>
+                        
+                        <div id="filters-section" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <!-- Price Filters -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Price Range</label>
+                                    <div class="flex space-x-2">
+                                        <input type="number" id="filter-min-price" placeholder="Min" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                        <input type="number" id="filter-max-price" placeholder="Max" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                    </div>
+                                </div>
+                                
+                                <!-- Market Cap Filters -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Market Cap</label>
+                                    <select id="filter-market-cap" class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                                            <option value="">Any Size</option>
+                                            <option value="mega">Mega Cap (&gt;$200B)</option>
+                                            <option value="large">Large Cap ($10B-$200B)</option>
+                                            <option value="mid">Mid Cap ($2B-$10B)</option>
+                                            <option value="small">Small Cap ($300M-$2B)</option>
+                                            <option value="micro">Micro Cap (&lt;$300M)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Volume Filter -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Min Volume</label>
+                                    <input type="number" id="filter-min-volume" placeholder="e.g., 1000000" 
+                                           class="w-full bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                </div>
+                                
+                                <!-- Performance Filters -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">1-Day Change %</label>
+                                    <div class="flex space-x-2">
+                                        <input type="number" id="filter-min-change-1d" placeholder="Min %" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                        <input type="number" id="filter-max-change-1d" placeholder="Max %" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                    </div>
+                                </div>
+                                
+                                <!-- RSI Filter -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">RSI Range</label>
+                                    <div class="flex space-x-2">
+                                        <input type="number" id="filter-min-rsi" placeholder="Min" min="0" max="100" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                        <input type="number" id="filter-max-rsi" placeholder="Max" min="0" max="100" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                    </div>
+                                </div>
+                                
+                                <!-- PE Ratio Filter -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">P/E Ratio</label>
+                                    <div class="flex space-x-2">
+                                        <input type="number" id="filter-min-pe" placeholder="Min" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                        <input type="number" id="filter-max-pe" placeholder="Max" 
+                                               class="w-1/2 bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Technical Filters -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="filter-above-sma20" class="rounded text-indigo-600">
+                                    <span class="text-sm text-gray-300">Above SMA20</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="filter-above-sma50" class="rounded text-indigo-600">
+                                    <span class="text-sm text-gray-300">Above SMA50</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="filter-near-52w-high" class="rounded text-indigo-600">
+                                    <span class="text-sm text-gray-300">Near 52W High</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="filter-near-52w-low" class="rounded text-indigo-600">
+                                    <span class="text-sm text-gray-300">Near 52W Low</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex justify-center space-x-4">
+                                <button onclick="clearFilters()" 
+                                        class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors">
+                                    Clear Filters
+                                </button>
+                                <button onclick="runScreener()" 
+                                        class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-md transition-all transform hover:scale-105">
+                                    Run Screener
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screener Results -->
+                    <div id="screener-results" class="hidden">
+                        <div id="screener-loader" class="flex flex-col items-center justify-center min-h-[300px]">
+                            <div class="loader mb-4"></div>
+                            <p class="text-gray-400 pulse-animation">Screening stocks...</p>
+                        </div>
+                        <div id="screener-output" class="hidden">
+                            <div class="glass-effect rounded-lg p-6 mb-8 border border-gray-700/50 shadow-xl">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-sm text-gray-400">Results: </span>
+                                        <span class="text-white font-semibold" id="results-count">0</span>
+                                        <span class="text-sm text-gray-400"> stocks found</span>
+                                    </div>
+                                    <select id="sort-select" onchange="sortResults()" 
+                                            class="bg-gray-800/50 border border-gray-700 rounded px-3 py-1 text-sm text-white">
+                                        <option value="market_cap-desc">Market Cap ↓</option>
+                                        <option value="market_cap-asc">Market Cap ↑</option>
+                                        <option value="change_1d-desc">1D Change ↓</option>
+                                        <option value="change_1d-asc">1D Change ↑</option>
+                                        <option value="volume-desc">Volume ↓</option>
+                                        <option value="rsi-asc">RSI ↑</option>
+                                        <option value="pe_ratio-asc">P/E Ratio ↑</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full glass-effect rounded-lg overflow-hidden">
+                                    <thead class="bg-gray-800/50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Symbol</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Name</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase">Price</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase">1D %</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase">Volume</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase">Market Cap</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase">RSI</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase">P/E</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-300 uppercase">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="screener-table-body">
+                                        <!-- Results will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Educational Footer -->
+                <div class="mt-16 glass-effect rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-yellow-400 mb-3">⚠️ Important Disclaimer</h3>
+                    <p class="text-sm text-gray-400">
+                        These tools are for educational purposes only and should not be considered financial advice. 
+                        Always do your own research, consider your risk tolerance, and consult with a qualified financial advisor before making investment decisions. 
+                        Past performance does not guarantee future results.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="bg-gray-900/50 py-12 mt-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <svg class="h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                            </svg>
+                            <span class="text-xl font-bold text-white">InvestED</span>
+                        </div>
+                        <p class="text-gray-400 text-sm">Democratizing financial education through AI-powered learning and professional tools.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Platform</h4>
+                        <ul class="space-y-2">
+                            <li><a href="learn.html" class="text-gray-400 hover:text-white text-sm transition-colors">Learn</a></li>
+                            <li><a href="optimise.html" class="text-gray-400 hover:text-white text-sm transition-colors">Portfolio Optimiser</a></li>
+                            <li><a href="trade.html" class="text-gray-400 hover:text-white text-sm transition-colors">Trading Signals</a></li>
+                            <li><a href="news.html" class="text-gray-400 hover:text-white text-sm transition-colors">Market News</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Resources</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Getting Started</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">FAQ</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Blog</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Support</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Connect</h4>
+                        <div class="flex space-x-4 mb-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/></svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            </a>
+                        </div>
+                        <p class="text-gray-400 text-sm">contact@invested.app</p>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                    <p class="text-gray-500 text-sm">© 2025 InvestED. All rights reserved. | <a href="#" class="hover:text-white transition-colors">Privacy Policy</a> | <a href="#" class="hover:text-white transition-colors">Terms of Service</a></p>
+                </div>
+            </div>
+        </footer>
+
+    <script>
+        // Global variables
+        let currentTab = 'indicators';
+        let signalStats = { total: 0, buy: 0, sell: 0, hold: 0 };
+        let currentView = 'signals';
+        let screenerResults = [];
+        let selectedPreset = null;
+
+        // Main view switcher
+        function switchMainView(view) {
+            currentView = view;
+            
+            // Update tab styles
+            document.querySelectorAll('.main-tab').forEach(tab => {
+                tab.classList.remove('active', 'text-white');
+                tab.classList.add('text-gray-300');
+            });
+            
+            const activeTab = document.getElementById(`main-tab-${view}`);
+            activeTab.classList.add('active', 'text-white');
+            
+            // Show/hide views
+            if (view === 'signals') {
+                document.getElementById('signals-view').classList.remove('hidden');
+                document.getElementById('screener-view').classList.add('hidden');
+            } else {
+                document.getElementById('signals-view').classList.add('hidden');
+                document.getElementById('screener-view').classList.remove('hidden');
+                loadPresets();
+            }
+        }
+
+        // === TRADING SIGNALS FUNCTIONS (your existing code) ===
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            const selectedBtn = document.getElementById(`tab-${tabName}`);
+            selectedBtn.classList.remove('bg-gray-700', 'text-gray-300');
+            selectedBtn.classList.add('bg-indigo-600', 'text-white');
+            
+            currentTab = tabName;
+        }
+
+        // Signals form submission
+        document.getElementById('signals-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const tickerInput = document.getElementById('ticker-input');
+            const timeframe = document.getElementById('timeframe-select').value;
+            const tickers = tickerInput.value.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+            
+            if (tickers.length === 0) {
+                alert('Please enter at least one ticker symbol.');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('signals-results-container');
+            const loaderContainer = document.getElementById('signals-loader-container');
+            const signalsOutput = document.getElementById('signals-output');
+            
+            resultsContainer.classList.remove('hidden');
+            loaderContainer.classList.remove('hidden');
+            signalsOutput.classList.add('hidden');
+
+            try {
+                const signalsData = await getTradeSignalsFromBackend(tickers, timeframe);
+                displayEnhancedSignals(signalsData);
+            } catch (error) {
+                console.error("Error fetching signals:", error);
+                loaderContainer.classList.add('hidden');
+                signalsOutput.classList.remove('hidden');
+                signalsOutput.innerHTML = `
+                    <div class="text-center p-8 glass-effect rounded-lg">
+                        <p class="text-red-400 text-lg">${error.message}</p>
+                        <p class="text-gray-400 text-sm mt-2">Please check your ticker symbols and try again.</p>
+                    </div>
+                `;
+            }
+        });
+
+        async function getTradeSignalsFromBackend(tickers, timeframe) {
+            const serverUrl = 'http://127.0.0.1:5000/get-trade-signals';
+            const response = await fetch(serverUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    tickers: tickers,
+                    timeframe: timeframe 
+                })
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json();
+                throw new Error(errorBody.error || `Server responded with status ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        function displayEnhancedSignals(data) {
+            const loaderContainer = document.getElementById('signals-loader-container');
+            const signalsOutput = document.getElementById('signals-output');
+            
+            loaderContainer.classList.add('hidden');
+            signalsOutput.classList.remove('hidden');
+            signalsOutput.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                signalsOutput.innerHTML = `
+                    <div class="text-center p-8 glass-effect rounded-lg">
+                        <p class="text-gray-400">No signals could be generated for the provided tickers.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            signalStats = { total: 0, buy: 0, sell: 0, hold: 0 };
+
+            data.forEach(stock => {
+                const overallSignal = calculateOverallSignal(stock.indicators);
+                const signalStrength = calculateSignalStrength(stock.indicators);
+                
+                updateSignalStats(stock.indicators);
+
+                const stockCard = document.createElement('div');
+                stockCard.className = 'signal-card glass-effect rounded-lg p-6';
+                
+                stockCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">${stock.ticker}</h2>
+                            <p class="text-sm text-gray-400 mt-1">Technical Analysis Summary</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold ${getSignalColor(overallSignal)}">${overallSignal}</div>
+                            <div class="text-xs text-gray-400">Signal Strength: ${signalStrength}%</div>
+                            <div class="mt-2">
+                                <div class="w-32 bg-gray-700 rounded-full h-2">
+                                    <div class="h-2 rounded-full ${getStrengthBarColor(signalStrength)}" 
+                                         style="width: ${signalStrength}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        ${stock.indicators.map(indicator => `
+                            <div class="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-300">${indicator.name}</span>
+                                <span class="font-bold px-3 py-1 rounded-full text-xs ${getSignalStyle(indicator.signal)}">
+                                    ${indicator.signal}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-gray-800/30 rounded-lg">
+                        <p class="text-xs text-gray-400">
+                            <strong>💡 Insight:</strong> ${generateInsight(stock.ticker, overallSignal, signalStrength)}
+                        </p>
+                    </div>
+                `;
+                
+                signalsOutput.appendChild(stockCard);
+            });
+
+            updateStatsDisplay();
+        }
+
+        function calculateOverallSignal(indicators) {
+            let buyCount = 0;
+            let sellCount = 0;
+            
+            indicators.forEach(ind => {
+                if (ind.signal === 'BUY') buyCount++;
+                else if (ind.signal === 'SELL') sellCount++;
+            });
+            
+            if (buyCount > sellCount && buyCount >= 2) return 'STRONG BUY';
+            if (sellCount > buyCount && sellCount >= 2) return 'STRONG SELL';
+            if (buyCount > sellCount) return 'BUY';
+            if (sellCount > buyCount) return 'SELL';
+            return 'HOLD';
+        }
+
+        function calculateSignalStrength(indicators) {
+            const totalIndicators = indicators.length;
+            const counts = { BUY: 0, SELL: 0, HOLD: 0 };
+            indicators.forEach(ind => counts[ind.signal]++);
+            
+            const maxCount = Math.max(counts.BUY, counts.SELL, counts.HOLD);
+            return Math.round((maxCount / totalIndicators) * 100);
+        }
+
+        function updateSignalStats(indicators) {
+            indicators.forEach(ind => {
+                signalStats.total++;
+                if (ind.signal === 'BUY') signalStats.buy++;
+                else if (ind.signal === 'SELL') signalStats.sell++;
+                else if (ind.signal === 'HOLD') signalStats.hold++;
+            });
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('total-signals').textContent = signalStats.total;
+            document.getElementById('buy-signals').textContent = signalStats.buy;
+            document.getElementById('sell-signals').textContent = signalStats.sell;
+            document.getElementById('hold-signals').textContent = signalStats.hold;
+        }
+
+        function getSignalColor(signal) {
+            if (signal.includes('BUY')) return 'text-green-400';
+            if (signal.includes('SELL')) return 'text-red-400';
+            return 'text-yellow-400';
+        }
+
+        function getSignalStyle(signal) {
+            if (signal === 'BUY') return 'text-green-400 bg-green-900/30';
+            if (signal === 'SELL') return 'text-red-400 bg-red-900/30';
+            return 'text-yellow-400 bg-yellow-900/30';
+        }
+
+        function getStrengthBarColor(strength) {
+            if (strength >= 75) return 'bg-green-500';
+            if (strength >= 50) return 'bg-yellow-500';
+            return 'bg-orange-500';
+        }
+
+        function generateInsight(ticker, signal, strength) {
+            const insights = {
+                'STRONG BUY': [
+                    `Multiple indicators suggest ${ticker} is in oversold territory with strong bullish momentum building.`,
+                    `Technical indicators align positively for ${ticker}. Consider entry with proper stop-loss placement.`,
+                    `${ticker} shows strong technical setup. Volume confirmation would strengthen this signal.`
+                ],
+                'BUY': [
+                    `${ticker} shows moderate bullish signals. Watch for confirmation from price action.`,
+                    `Some positive momentum detected in ${ticker}. Consider scaling into position.`,
+                    `Technical indicators lean bullish for ${ticker}, but wait for better entry point.`
+                ],
+                'STRONG SELL': [
+                    `${ticker} appears overbought with bearish divergence. Consider taking profits or hedging.`,
+                    `Multiple indicators suggest downward pressure on ${ticker}. Risk management crucial.`,
+                    `Technical weakness detected in ${ticker}. Avoid new long positions.`
+                ],
+                'SELL': [
+                    `${ticker} shows signs of weakening momentum. Monitor support levels closely.`,
+                    `Mixed signals with bearish bias for ${ticker}. Consider reducing position size.`,
+                    `Technical indicators suggest caution with ${ticker}. Wait for trend clarification.`
+                ],
+                'HOLD': [
+                    `${ticker} shows mixed signals. Wait for clearer directional bias before acting.`,
+                    `No strong conviction signal for ${ticker}. Maintain current position if any.`,
+                    `${ticker} in consolidation phase. Watch for breakout in either direction.`
+                ]
+            };
+            
+            const signalKey = signal.includes('STRONG') ? signal : signal;
+            const insightArray = insights[signalKey] || insights['HOLD'];
+            return insightArray[Math.floor(Math.random() * insightArray.length)] + 
+                   ` (Signal strength: ${strength}%)`;
+        }
+
+        // === MARKET SCREENER FUNCTIONS ===
+        async function loadPresets() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/screener/presets');
+                const presets = await response.json();
+                
+                const container = document.getElementById('preset-container');
+                container.innerHTML = '';
+                
+                Object.entries(presets).forEach(([key, preset]) => {
+                    const card = document.createElement('div');
+                    card.className = 'preset-card glass-effect rounded-lg p-3 cursor-pointer border-2 border-transparent';
+                    card.dataset.preset = key;
+                    card.innerHTML = `
+                        <h3 class="font-semibold text-sm text-white">${preset.name}</h3>
+                        <p class="text-xs text-gray-400 mt-1">${preset.description}</p>
+                    `;
+                    card.onclick = () => selectPreset(key, preset);
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading presets:', error);
+            }
+        }
+
+        function selectPreset(key, preset) {
+            // Update visual selection
+            document.querySelectorAll('.preset-card').forEach(card => {
+                card.classList.remove('selected', 'border-indigo-500');
+                card.classList.add('border-transparent');
+            });
+            
+            const selectedCard = document.querySelector(`[data-preset="${key}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected', 'border-indigo-500');
+                selectedCard.classList.remove('border-transparent');
+            }
+            
+            selectedPreset = preset;
+            
+            // Apply preset filters
+            clearFilters();
+            const filters = preset.filters;
+            
+            if (filters.min_price !== undefined) document.getElementById('filter-min-price').value = filters.min_price;
+            if (filters.max_price !== undefined) document.getElementById('filter-max-price').value = filters.max_price;
+            if (filters.min_market_cap !== undefined) {
+                const marketCapSelect = document.getElementById('filter-market-cap');
+                if (filters.min_market_cap >= 200000000000) marketCapSelect.value = 'mega';
+                else if (filters.min_market_cap >= 10000000000) marketCapSelect.value = 'large';
+                else if (filters.min_market_cap >= 2000000000) marketCapSelect.value = 'mid';
+                else if (filters.min_market_cap >= 300000000) marketCapSelect.value = 'small';
+                else marketCapSelect.value = 'micro';
+            }
+            if (filters.min_volume !== undefined) document.getElementById('filter-min-volume').value = filters.min_volume;
+            if (filters.min_change_1d !== undefined) document.getElementById('filter-min-change-1d').value = filters.min_change_1d;
+            if (filters.min_rsi !== undefined) document.getElementById('filter-min-rsi').value = filters.min_rsi;
+            if (filters.max_rsi !== undefined) document.getElementById('filter-max-rsi').value = filters.max_rsi;
+            if (filters.min_pe !== undefined) document.getElementById('filter-min-pe').value = filters.min_pe;
+            if (filters.max_pe !== undefined) document.getElementById('filter-max-pe').value = filters.max_pe;
+            if (filters.above_sma20) document.getElementById('filter-above-sma20').checked = true;
+            if (filters.above_sma50) document.getElementById('filter-above-sma50').checked = true;
+            if (filters.near_52w_high) document.getElementById('filter-near-52w-high').checked = true;
+            if (filters.near_52w_low) document.getElementById('filter-near-52w-low').checked = true;
+            
+            // Auto-run screener with preset
+            runScreener();
+        }
+
+        function toggleFilters() {
+            const section = document.getElementById('filters-section');
+            const toggleText = document.getElementById('toggle-text');
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                toggleText.textContent = 'Hide Filters ▲';
+            } else {
+                section.classList.add('hidden');
+                toggleText.textContent = 'Show Filters ▼';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-min-price').value = '';
+            document.getElementById('filter-max-price').value = '';
+            document.getElementById('filter-market-cap').value = '';
+            document.getElementById('filter-min-volume').value = '';
+            document.getElementById('filter-min-change-1d').value = '';
+            document.getElementById('filter-max-change-1d').value = '';
+            document.getElementById('filter-min-rsi').value = '';
+            document.getElementById('filter-max-rsi').value = '';
+            document.getElementById('filter-min-pe').value = '';
+            document.getElementById('filter-max-pe').value = '';
+            document.getElementById('filter-above-sma20').checked = false;
+            document.getElementById('filter-above-sma50').checked = false;
+            document.getElementById('filter-near-52w-high').checked = false;
+            document.getElementById('filter-near-52w-low').checked = false;
+            
+            // Clear preset selection
+            selectedPreset = null;
+            document.querySelectorAll('.preset-card').forEach(card => {
+                card.classList.remove('selected', 'border-indigo-500');
+                card.classList.add('border-transparent');
+            });
+        }
+
+        async function runScreener() {
+            const filters = {};
+            
+            // Collect filter values
+            const minPrice = document.getElementById('filter-min-price').value;
+            const maxPrice = document.getElementById('filter-max-price').value;
+            const marketCap = document.getElementById('filter-market-cap').value;
+            const minVolume = document.getElementById('filter-min-volume').value;
+            const minChange1d = document.getElementById('filter-min-change-1d').value;
+            const maxChange1d = document.getElementById('filter-max-change-1d').value;
+            const minRsi = document.getElementById('filter-min-rsi').value;
+            const maxRsi = document.getElementById('filter-max-rsi').value;
+            const minPe = document.getElementById('filter-min-pe').value;
+            const maxPe = document.getElementById('filter-max-pe').value;
+            
+            if (minPrice) filters.min_price = parseFloat(minPrice);
+            if (maxPrice) filters.max_price = parseFloat(maxPrice);
+            
+            // Convert market cap selection to values
+            if (marketCap) {
+                const marketCapMap = {
+                    'mega': { min: 200000000000 },
+                    'large': { min: 10000000000, max: 200000000000 },
+                    'mid': { min: 2000000000, max: 10000000000 },
+                    'small': { min: 300000000, max: 2000000000 },
+                    'micro': { max: 300000000 }
+                };
+                const capRange = marketCapMap[marketCap];
+                if (capRange.min) filters.min_market_cap = capRange.min;
+                if (capRange.max) filters.max_market_cap = capRange.max;
+            }
+            
+            if (minVolume) filters.min_volume = parseInt(minVolume);
+            if (minChange1d) filters.min_change_1d = parseFloat(minChange1d);
+            if (maxChange1d) filters.max_change_1d = parseFloat(maxChange1d);
+            if (minRsi) filters.min_rsi = parseFloat(minRsi);
+            if (maxRsi) filters.max_rsi = parseFloat(maxRsi);
+            if (minPe) filters.min_pe = parseFloat(minPe);
+            if (maxPe) filters.max_pe = parseFloat(maxPe);
+            
+            filters.above_sma20 = document.getElementById('filter-above-sma20').checked;
+            filters.above_sma50 = document.getElementById('filter-above-sma50').checked;
+            filters.near_52w_high = document.getElementById('filter-near-52w-high').checked;
+            filters.near_52w_low = document.getElementById('filter-near-52w-low').checked;
+            
+            // Show loader
+            const resultsDiv = document.getElementById('screener-results');
+            const loaderDiv = document.getElementById('screener-loader');
+            const outputDiv = document.getElementById('screener-output');
+            
+            resultsDiv.classList.remove('hidden');
+            loaderDiv.classList.remove('hidden');
+            outputDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/screener/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filters: filters,
+                        sort_by: 'market_cap',
+                        sort_order: 'desc',
+                        limit: 100,
+                        use_all_stocks: true
+                    })
+                });
+                
+                const data = await response.json();
+                screenerResults = data.results || [];
+                displayScreenerResults(screenerResults);
+                
+            } catch (error) {
+                console.error('Error running screener:', error);
+                loaderDiv.classList.add('hidden');
+                outputDiv.classList.remove('hidden');
+                outputDiv.innerHTML = `
+                    <div class="text-center p-8 glass-effect rounded-lg">
+                        <p class="text-red-400">Error running screener. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayScreenerResults(results) {
+            const loaderDiv = document.getElementById('screener-loader');
+            const outputDiv = document.getElementById('screener-output');
+            const tableBody = document.getElementById('screener-table-body');
+            const resultsCount = document.getElementById('results-count');
+            
+            loaderDiv.classList.add('hidden');
+            outputDiv.classList.remove('hidden');
+            
+            resultsCount.textContent = results.length;
+            tableBody.innerHTML = '';
+            
+            if (results.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-8 text-gray-400">
+                            No stocks found matching your criteria. Try adjusting the filters.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            results.forEach(stock => {
+                const row = document.createElement('tr');
+                row.className = 'stock-row border-t border-gray-700 hover:bg-gray-800/30';
+                
+                const changeClass = stock.change_1d >= 0 ? 'positive' : 'negative';
+                const changeSymbol = stock.change_1d >= 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${stock.ticker}</td>
+                    <td class="px-4 py-3 text-sm text-gray-300">${stock.name || stock.ticker}</td>
+                    <td class="px-4 py-3 text-right text-white">${stock.current_price.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-right ${changeClass}">${changeSymbol}${stock.change_1d.toFixed(2)}%</td>
+                    <td class="px-4 py-3 text-right text-gray-300">${formatVolume(stock.volume)}</td>
+                    <td class="px-4 py-3 text-right text-gray-300">${formatMarketCap(stock.market_cap)}</td>
+                    <td class="px-4 py-3 text-right text-gray-300">${stock.rsi.toFixed(1)}</td>
+                    <td class="px-4 py-3 text-right text-gray-300">${stock.pe_ratio ? stock.pe_ratio.toFixed(1) : 'N/A'}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="analyzeStock('${stock.ticker}')" 
+                                class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded transition-colors">
+                            Analyze
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        function formatVolume(volume) {
+            if (volume >= 1000000000) return `${(volume / 1000000000).toFixed(1)}B`;
+            if (volume >= 1000000) return `${(volume / 1000000).toFixed(1)}M`;
+            if (volume >= 1000) return `${(volume / 1000).toFixed(1)}K`;
+            return volume.toString();
+        }
+
+        function formatMarketCap(marketCap) {
+            if (marketCap >= 1000000000000) return `${(marketCap / 1000000000000).toFixed(1)}T`;
+            if (marketCap >= 1000000000) return `${(marketCap / 1000000000).toFixed(1)}B`;
+            if (marketCap >= 1000000) return `${(marketCap / 1000000).toFixed(1)}M`;
+            return marketCap.toString();
+        }
+
+        function sortResults() {
+            const sortSelect = document.getElementById('sort-select');
+            const [field, order] = sortSelect.value.split('-');
+            
+            screenerResults.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                if (aVal === null || aVal === undefined) aVal = 0;
+                if (bVal === null || bVal === undefined) bVal = 0;
+                
+                if (order === 'asc') {
+                    return aVal - bVal;
+                } else {
+                    return bVal - aVal;
+                }
+            });
+            
+            displayScreenerResults(screenerResults);
+        }
+
+        function analyzeStock(ticker) {
+            // Switch to signals view and populate with the ticker
+            switchMainView('signals');
+            document.getElementById('ticker-input').value = ticker;
+            // Optionally auto-submit the form
+            document.getElementById('signals-form').dispatchEvent(new Event('submit'));
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            showTab('indicators');
+        });
+    </script>
+</body>
+</html>

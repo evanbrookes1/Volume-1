@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvestED - Market News & Reports</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Space Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: #0c0a1e;
+            color: #e0e7ff;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #6366f1; /* Indigo color */
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0c0a1e 0%, #1a1832 50%, #0c0a1e 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-20px, -20px) rotate(1deg); }
+            66% { transform: translate(20px, -10px) rotate(-1deg); }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Enhanced loader */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Ticker tag animation */
+        @keyframes slideInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .ticker-tag {
+            animation: slideInScale 0.3s ease-out;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Button effects */
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Input focus effect */
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 27, 75, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+
+        /* Result card animation */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        /* Floating dots background */
+        .dot {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.3);
+            pointer-events: none;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translateY(100vh) translateX(0);
+            }
+            to {
+                transform: translateY(-10vh) translateX(100px);
+            }
+        }
+    
+    </style>
+</head>
+<body>
+    <!-- Floating background elements -->
+    <div class="dot w-2 h-2" style="left: 10%; animation: drift 15s infinite linear;"></div>
+    <div class="dot w-3 h-3" style="left: 30%; animation: drift 20s infinite linear; animation-delay: 3s;"></div>
+    <div class="dot w-2 h-2" style="left: 50%; animation: drift 18s infinite linear; animation-delay: 6s;"></div>
+    <div class="dot w-3 h-3" style="left: 70%; animation: drift 22s infinite linear; animation-delay: 9s;"></div>
+    <div class="dot w-2 h-2" style="left: 90%; animation: drift 17s infinite linear; animation-delay: 12s;"></div>
+   <div class="min-h-screen flex flex-col">
+        
+        <!-- Header / Navigation Bar -->
+        <header class="w-full py-5 px-4 sm:px-6 lg:px-8 z-10 bg-gray-900/30 sticky top-0 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto">
+                <nav class="flex items-center justify-between">
+                    <!-- Logo -->
+                    <div class="flex items-center space-x-3">
+                         <svg class="h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                        </svg>
+                        <a href="index.html" class="text-2xl font-bold text-white">InvestED</a>
+                    </div>
+
+                    <!-- Navigation Links (Desktop) -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="wwa.html" class="text-gray-300 hover:text-white transition-colors duration-200">Who We Are</a>
+                        <a href="learn.html" class="text-gray-300 hover:text-white transition-colors duration-200">Learn</a>
+                        <a href="optimise.html" class="text-gray-300 hover:text-white transition-colors duration-200">Optimise</a>
+                        <a href="trade.html" class="text-gray-300 hover:text-white transition-colors duration-200">Trading</a>
+                        <a href="#" class="font-semibold text-white">Reports</a>
+                    </div>
+  
+                    <!-- Log In Link -->
+                    <div class="hidden md:block">
+                        <a href="#" class="flex items-center text-gray-300 hover:text-white transition-colors duration-200">
+                            <span>Log in</span>
+                            <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main class="flex-grow">
+            <!-- Market Snapshot Section -->
+            <section class="py-12 sm:py-16">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="text-center mb-12">
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-white">Market Snapshot</h1>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-400">A real-time overview of key market indices and commodities.</p>
+                    </div>
+                    <div id="market-snapshot-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+                        <div id="market-loader" class="col-span-full flex flex-col items-center justify-center min-h-[150px]">
+                            <div class="loader"></div>
+                            <p class="mt-4 text-gray-400">Fetching market data...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Divider -->
+            <div class="max-w-7xl mx-auto px-4"><hr class="border-gray-800"></div>
+
+            <!-- Economic Calendar Section -->
+            <section class="py-12 sm:py-16">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Economic Calendar</h2>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-400">Key upcoming economic events that could impact the markets.</p>
+                    </div>
+                    <div id="calendar-container" class="bg-gray-900/50 rounded-lg p-4 sm:p-6">
+                        <div id="calendar-loader" class="flex flex-col items-center justify-center min-h-[300px]">
+                            <div class="loader"></div>
+                            <p class="mt-4 text-gray-400">Loading economic calendar...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Divider -->
+            <div class="max-w-7xl mx-auto px-4"><hr class="border-gray-800"></div>
+
+            <!-- Financial News Section -->
+            <section class="py-12 sm:py-16">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="text-center mb-12">
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-white">Latest Financial News</h1>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-400">Stay up-to-date with market analysis from top sources.</p>
+                    </div>
+                    <div id="news-grid" class="mt-12 grid gap-12 lg:grid-cols-3">
+                        <div id="news-loader" class="lg:col-span-3 flex flex-col items-center justify-center min-h-[400px]">
+                            <div class="loader"></div>
+                            <p class="mt-4 text-gray-400">Fetching latest news...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900/50 py-12 mt-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <svg class="h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                            </svg>
+                            <span class="text-xl font-bold text-white">InvestED</span>
+                        </div>
+                        <p class="text-gray-400 text-sm">Democratizing financial education through AI-powered learning and professional tools.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Platform</h4>
+                        <ul class="space-y-2">
+                            <li><a href="learn.html" class="text-gray-400 hover:text-white text-sm transition-colors">Learn</a></li>
+                            <li><a href="optimise.html" class="text-gray-400 hover:text-white text-sm transition-colors">Portfolio Optimiser</a></li>
+                            <li><a href="trade.html" class="text-gray-400 hover:text-white text-sm transition-colors">Trading Signals</a></li>
+                            <li><a href="news.html" class="text-gray-400 hover:text-white text-sm transition-colors">Market News</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Resources</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Getting Started</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">FAQ</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Blog</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Support</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-semibold mb-4">Connect</h4>
+                        <div class="flex space-x-4 mb-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/></svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            </a>
+                        </div>
+                        <p class="text-gray-400 text-sm">contact@invested.app</p>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                    <p class="text-gray-500 text-sm">© 2025 InvestED. All rights reserved. | <a href="#" class="hover:text-white transition-colors">Privacy Policy</a> | <a href="#" class="hover:text-white transition-colors">Terms of Service</a></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- CONFIGURATION ---
+            const API_BASE_URL = 'http://127.0.0.1:5000';
+
+            // --- ELEMENT SELECTORS ---
+            const marketGrid = document.getElementById('market-snapshot-grid');
+            const marketLoader = document.getElementById('market-loader');
+            const calendarContainer = document.getElementById('calendar-container');
+            const calendarLoader = document.getElementById('calendar-loader');
+            const newsGrid = document.getElementById('news-grid');
+            const newsLoader = document.getElementById('news-loader');
+
+            // --- FETCH MARKET SNAPSHOT ---
+            async function fetchMarketData() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/get-market-snapshot`);
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    const data = await response.json();
+                    marketLoader.style.display = 'none';
+                    populateMarketData(data);
+                } catch (error) {
+                    console.error("Failed to fetch market data:", error);
+                    marketLoader.innerHTML = `<p class="text-red-400 text-center col-span-full">Could not load market data.</p>`;
+                }
+            }
+
+            // --- POPULATE MARKET SNAPSHOT UI ---
+            function populateMarketData(snapshotData) {
+                if (!snapshotData || snapshotData.length === 0) {
+                    marketGrid.innerHTML = '<p class="text-center text-gray-500 col-span-full">No market data found.</p>';
+                    return;
+                }
+                marketGrid.innerHTML = snapshotData.map(item => {
+                    const changeColor = item.is_positive ? 'text-green-400' : 'text-red-400';
+                    return `
+                        <div class="bg-gray-900/50 rounded-lg p-4 text-center transform hover:-translate-y-1 transition-transform duration-300">
+                            <p class="text-sm font-bold text-indigo-300 truncate">${item.name}</p>
+                            <p class="text-xl sm:text-2xl font-bold text-white mt-2">${item.price}</p>
+                            <div class="flex justify-center items-baseline space-x-2 mt-1 ${changeColor}">
+                                <span class="font-semibold">${item.change}</span>
+                                <span class="text-sm font-semibold">${item.percent_change}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // --- FETCH ECONOMIC CALENDAR ---
+            async function fetchEconomicCalendar() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/get-economic-calendar`);
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    const data = await response.json();
+                    populateEconomicCalendar(data);
+                } catch (error) {
+                    console.error("Failed to fetch economic calendar:", error);
+                    calendarLoader.innerHTML = `<p class="text-red-400 text-center">Could not load economic calendar.</p>`;
+                }
+            }
+
+            // --- POPULATE ECONOMIC CALENDAR UI ---
+            function populateEconomicCalendar(data) {
+                if (!data || data.length === 0) {
+                    calendarContainer.innerHTML = '<p class="text-center text-gray-500">No upcoming economic events found.</p>';
+                    return;
+                }
+
+                const getImpactStars = (impact) => {
+                    let color = 'text-gray-600';
+                    let dots = '●';
+                    if (impact === 'medium') { color = 'text-yellow-400'; dots = '●●'; }
+                    if (impact === 'high') { color = 'text-red-500'; dots = '●●●'; }
+                    return `<span class="text-xs font-bold ${color}" title="Impact: ${impact}">${dots}</span>`;
+                };
+                
+                const currencyToFlag = {'USD':'🇺🇸','EUR':'🇪🇺','JPY':'🇯🇵','GBP':'🇬🇧','CHF':'🇨🇭','CAD':'🇨🇦','AUD':'🇦🇺','NZD':'🇳🇿','CNY':'🇨🇳'};
+
+                let calendarHTML = data.map(dayData => {
+                    const eventDate = new Date(dayData.date + 'T00:00:00');
+                    const dayName = eventDate.toLocaleDateString('en-US', { weekday: 'long' });
+                    const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+                    const eventsHTML = dayData.events.map(event => `
+                        <div class="grid grid-cols-12 gap-2 items-center text-sm py-2 border-b border-gray-800 last:border-b-0">
+                            <div class="col-span-2 sm:col-span-1 text-gray-400 font-mono">${event.time}</div>
+                            <div class="col-span-3 sm:col-span-2 flex items-center gap-2">
+                               <span class="text-lg">${currencyToFlag[event.currency] || '🏳️'}</span>
+                               <span class="font-bold text-gray-300">${event.currency}</span>
+                            </div>
+                            <div class="col-span-5 sm:col-span-7 text-white">${event.event}</div>
+                            <div class="col-span-2 sm:col-span-2 flex justify-end">${getImpactStars(event.impact)}</div>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div class="mb-6 last:mb-0">
+                            <h3 class="text-lg font-bold text-indigo-300 mb-3 sticky top-16 bg-gray-900/50 py-2 backdrop-blur-sm">${dayName}, ${formattedDate}</h3>
+                            <div class="space-y-1">${eventsHTML}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                calendarLoader.style.display = 'none';
+                calendarContainer.innerHTML = calendarHTML;
+            }
+
+            // --- FETCH FINANCIAL NEWS ---
+            async function fetchNews() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/get-financial-news`);
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    const articles = await response.json();
+                    newsLoader.style.display = 'none';
+                    populateNews(articles);
+                } catch (error) {
+                    console.error("Failed to fetch news:", error);
+                    newsLoader.innerHTML = `<p class="text-red-400 text-center lg:col-span-3">Could not load news.</p>`;
+                }
+            }
+
+            // --- POPULATE NEWS UI ---
+            function populateNews(articles) {
+                if (!articles || articles.length === 0) {
+                    newsGrid.innerHTML = '<p class="text-center text-gray-500 lg:col-span-3">No news articles found.</p>';
+                    return;
+                }
+                const mainArticle = articles[0];
+                const mainStoryHTML = `
+                    <div class="lg:col-span-2">
+                        <a href="${mainArticle.link}" target="_blank" rel="noopener noreferrer" class="block group">
+                            <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden bg-gray-800">
+                                 <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                                      src="${mainArticle.thumbnail || 'https://placehold.co/800x450/1e1b4b/e0e7ff?text=News'}" 
+                                      alt="Article thumbnail"
+                                      onerror="this.onerror=null;this.src='https://placehold.co/800x450/1e1b4b/e0e7ff?text=News';">
+                            </div>
+                            <p class="mt-4 text-xs font-semibold text-indigo-400">${mainArticle.source || 'News Source'}</p>
+                            <h2 class="mt-2 text-2xl font-bold text-white group-hover:text-indigo-300 transition-colors duration-200">${mainArticle.title}</h2>
+                            <p class="mt-3 text-sm font-semibold text-gray-500">${mainArticle.date}</p>
+                        </a>
+                    </div>
+                `;
+                const sideStories = articles.slice(1, 4);
+                let sideStoriesHTML = '<div class="space-y-8">';
+                sideStories.forEach((article, index) => {
+                    sideStoriesHTML += `
+                        <a href="${article.link}" target="_blank" rel="noopener noreferrer" class="block group">
+                            <h2 class="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors duration-200">${article.title}</h2>
+                            ${article.source ? `<p class="mt-2 text-sm font-semibold text-gray-500">${article.source} - ${article.date}</p>` : ''}
+                        </a>
+                    `;
+                    if (index < sideStories.length - 1) {
+                        sideStoriesHTML += '<hr class="border-gray-700">';
+                    }
+                });
+                sideStoriesHTML += '</div>';
+                newsGrid.innerHTML = mainStoryHTML + sideStoriesHTML;
+            }
+
+            // --- INITIALIZE PAGE ---
+            fetchMarketData();
+            fetchEconomicCalendar();
+            fetchNews();
+        });
+    </script>
+</body>
+</html>

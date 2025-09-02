@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvestED - Learn</title>
+
+    <!-- Use Tailwind for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Import fonts from google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0c0a1e 0%, #1a1832 50%, #0c0a1e 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+         @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-20px, -20px) rotate(1deg); }
+            66% { transform: translate(20px, -10px) rotate(-1deg); }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /*Change loader*/
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Quiz animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quiz-container {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        /* Related terms bubble styles */
+        .term-bubble {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .term-bubble:hover {
+            transform: scale(1.1);
+            background-color: #6366f1;
+        }
+
+        /* Favorites panel */
+        .favorites-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e1b4b 0%, #0c0a1e 100%);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .favorites-panel.open {
+            right: 0;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        /* Progress indicator */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        /* Note textarea styling */
+        .note-textarea {
+            background: rgba(30, 27, 75, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .note-textarea:focus {
+            background: rgba(30, 27, 75, 0.5);
+            border-color: #6366f1;
+        }
+
+        /* Achievement toast */
+        .achievement-toast {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        /* Floating dots background */
+        .dot {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.3);
+            pointer-events: none;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translateY(100vh) translateX(0);
+            }
+            to {
+                transform: translateY(-10vh) translateX(100px);
+            }
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="text-gray-200 font-[Space_Mono]">
+
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- Header / Navigation Bar -->
+        <header class="w-full py-5 px-4 sm:px-6 lg:px-8 z-10 bg-gray-900/30">
+            <div class="max-w-7xl mx-auto">
+                <nav class="flex items-center justify-between">
+                    <!-- Logo -->
+                    <div class="flex items-center space-x-3">
+                        <svg class="h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414-.336.75-.75.75h-.75a.75.75 0 01-.75-.75v-.75m0-3l-3-3m0 0l-3 3m3-3v11.25m6-2.25h.375a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.375m-1.5-3.75l-3 3m0 0l-3-3m3 3V4.5" />
+                        </svg>
+                        <a href="index.html" class="text-2xl font-bold text-white">InvestED</a>
+                    </div>
+
+                    <!-- Navigation Links (Desktop) -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="wwa.html" class="text-gray-300 hover:text-white transition-colors duration-200">Who We Are</a>
+                        <a href="learn.html" class="font-semibold text-white">Learn</a>
+                        <a href="optimise.html" class="text-gray-300 hover:text-white transition-colors duration-200">Optimise</a>
+                        <a href="trade.html" class="text-gray-300 hover:text-white transition-colors duration-200">Trading</a>
+                        <a href="news.html" class="text-gray-300 hover:text-white transition-colors duration-200">Reports</a>
+                    </div>
+
+                    <!-- Favorites Button & Login -->
+                    <div class="flex items-center space-x-4">
+                        <button id="favorites-toggle" class="relative p-2 text-gray-300 hover:text-white transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                            </svg>
+                            <span id="favorites-count" class="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                        </button>
+                        <div class="hidden md:block">
+                            <a href="#" class="flex items-center text-gray-300 hover:text-white transition-colors duration-200">
+                                <span>Log in</span>
+                                <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Favorites Panel -->
+        <div id="favorites-panel" class="favorites-panel">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">My Learning</h2>
+                    <button id="close-favorites" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Learning Stats -->
+                <div class="bg-gray-800/40 rounded-lg p-4 mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-400">Terms Learned</span>
+                        <span id="terms-learned-count" class="text-2xl font-bold text-indigo-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-400">Quizzes Completed</span>
+                        <span id="quizzes-completed-count" class="text-2xl font-bold text-green-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Average Score</span>
+                        <span id="average-score" class="text-2xl font-bold text-yellow-400">0%</span>
+                    </div>
+                </div>
+
+                <!-- Saved Terms -->
+                <h3 class="text-lg font-semibold text-white mb-4">Saved Terms</h3>
+                <div id="saved-terms-list" class="space-y-3">
+                    <!-- Saved terms will be inserted here -->
+                </div>
+
+                <!-- Clear Data Button -->
+                <button id="clear-data" class="mt-6 w-full py-2 bg-red-600/20 border border-red-600/50 rounded-lg text-red-400 hover:bg-red-600/30 transition-colors">
+                    Clear All Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Achievement Toast Container -->
+        <div id="achievement-container" class="fixed top-20 right-4 z-50"></div>
+
+        <!-- Main Content -->
+        <main class="flex-grow">
+            <section class="py-20 sm:py-24">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <!-- AI Search Section -->
+                    <div class="text-center max-w-2xl mx-auto">
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-white">Your Financial Dictionary</h1>
+                        <p class="mt-4 text-lg text-gray-400">Confused by a term? Enter it below. We'll explain it and find related short videos.</p>
+                    </div>
+
+                    <div class="mt-12 max-w-xl mx-auto">
+                        <form id="term-form" class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="term-input" placeholder="e.g., 'Roth IRA' or '401(k)'" required
+                                   class="w-full px-5 py-3.5 rounded-lg bg-gray-800/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200">
+                            <button type="submit" id="submit-button"
+                                    class="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-indigo-600 rounded-lg shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 flex items-center justify-center">
+                                Explain
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="result-container" class="mt-8 max-w-2xl mx-auto p-6 bg-gray-800/30 border border-gray-700 rounded-lg min-h-[100px] flex flex-col">
+                        <p id="placeholder-text" class="text-gray-500 text-center">Your explanation will appear here...</p>
+                        <div id="loader" class="hidden mx-auto">
+                            <span class="loader"></span>
+                        </div>
+                        <div id="result-text" class="text-left text-gray-300 hidden"></div>
+                        
+                        <!-- Save and Take Quiz Buttons -->
+                        <div id="action-buttons" class="hidden mt-6 flex gap-3">
+                            <button id="save-term-btn" class="px-4 py-2 bg-indigo-600/20 border border-indigo-600/50 rounded-lg text-indigo-400 hover:bg-indigo-600/30 transition-colors flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                                </svg>
+                                Save Term
+                            </button>
+                            <button id="take-quiz-btn" class="px-4 py-2 bg-green-600/20 border border-green-600/50 rounded-lg text-green-400 hover:bg-green-600/30 transition-colors flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Test Your Knowledge
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Related Terms Section -->
+                    <div id="related-terms-container" class="mt-12 max-w-4xl mx-auto hidden">
+                        <h3 class="text-xl font-bold text-white mb-6 text-center">Related Concepts</h3>
+                        <div id="related-terms-grid" class="flex flex-wrap justify-center gap-3">
+                            <!-- Related term bubbles will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Quiz Section -->
+                    <div id="quiz-container" class="mt-12 max-w-2xl mx-auto hidden">
+                        <div class="bg-gray-800/40 border border-gray-700 rounded-lg p-6 quiz-container">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-bold text-white">Quick Quiz</h3>
+                                <button id="close-quiz" class="text-gray-400 hover:text-white">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="quiz-content">
+                                <!-- Quiz questions will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Results Section -->
+                    <div id="video-results-container" class="mt-16 hidden">
+                        <div class="text-center max-w-2xl mx-auto">
+                            <h2 class="text-3xl font-extrabold text-white">Related Videos</h2>
+                        </div>
+                        <div id="video-grid" class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                            <!-- Video cards will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Learning Modules Section -->
+            <section class="py-16 sm:py-20 bg-gray-900/20">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Explore Learning Modules</h2>
+                        <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-400">Start with the basics or dive into more advanced topics. Our modules are designed to build your knowledge step-by-step.</p>
+                    </div>
+                    <div class="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        
+                        <!-- Module cards remain the same as original -->
+                        <a href="#" class="block p-6 bg-gray-800/40 border border-gray-700 rounded-lg shadow-lg hover:bg-gray-700/50 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            </div>
+                            <h3 class="mt-5 font-bold text-lg text-white">Investing Basics</h3>
+                            <p class="mt-2 text-sm text-gray-400">Understand the fundamental concepts of investing, from why it's important to the basic types of investments.</p>
+                        </a>
+
+                        <a href="#" class="block p-6 bg-gray-800/40 border border-gray-700 rounded-lg shadow-lg hover:bg-gray-700/50 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </div>
+                            <h3 class="mt-5 font-bold text-lg text-white">Understanding Stocks</h3>
+                            <p class="mt-2 text-sm text-gray-400">Learn what stocks are, how the stock market works, and the difference between individual stocks and indices.</p>
+                        </a>
+
+                        <a href="#" class="block p-6 bg-gray-800/40 border border-gray-700 rounded-lg shadow-lg hover:bg-gray-700/50 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <h3 class="mt-5 font-bold text-lg text-white">Bonds & Fixed Income</h3>
+                            <p class="mt-2 text-sm text-gray-400">Discover the role of bonds in a portfolio, how they provide stability, and what affects their value.</p>
+                        </a>
+                        
+                        <a href="#" class="block p-6 bg-gray-800/40 border border-gray-700 rounded-lg shadow-lg hover:bg-gray-700/50 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            </div>
+                            <h3 class="mt-5 font-bold text-lg text-white">ETFs & Mutual Funds</h3>
+                            <p class="mt-2 text-sm text-gray-400">Explore diversified funds, understand their benefits and costs, and learn how to choose the right ones for you.</p>
+                        </a>
+
+                        <a href="#" class="block p-6 bg-gray-800/40 border border-gray-700 rounded-lg shadow-lg hover:bg-gray-700/50 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h3 class="mt-5 font-bold text-lg text-white">Retirement Planning</h3>
+                            <p class="mt-2 text-sm text-gray-400">An introduction to planning for your future, including ISAs, pensions, and long-term investment strategies.</p>
+                        </a>
+
+                        <a href="#" class="block p-6 bg-gray-800/40 border border-gray-700 rounded-lg shadow-lg hover:bg-gray-700/50 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.494v1.076c0 .53-.18 1.031-.5 1.414l-6.43 6.43a2.955 2.955 0 01-2.093.878H5.986a1.18 1.18 0 01-1.179-1.179v-2.115c0-.79.313-1.554.878-2.093l6.43-6.43a2.955 2.955 0 011.414-.5h1.076m-1.076a1 1 0 00-1-1H4.618a1 1 0 00-1 1v1.076c0 .53.18 1.031.5 1.414l6.43 6.43a2.955 2.955 0 002.093.878h2.115c.65 0 1.179-.53 1.179-1.179v-1.076M16 5l-2-2m2 2l2-2m-2 2l-2 2m2-2l2 2"></path></svg>
+                            </div>
+                            <h3 class="mt-5 font-bold text-lg text-white">Risk Management</h3>
+                            <p class="mt-2 text-sm text-gray-400">Learn about diversification, asset allocation, and how to build a portfolio that matches your risk tolerance.</p>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full py-8 px-4 sm:px-6 lg:px-8 bg-gray-900/20">
+            <div class="max-w-7xl mx-auto text-center text-gray-500">
+                <p>&copy; 2025 InvestED. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- Element References ---
+        const termForm = document.getElementById('term-form');
+        const termInput = document.getElementById('term-input');
+        const submitButton = document.getElementById('submit-button');
+        const resultContainer = document.getElementById('result-container');
+        const placeholderText = document.getElementById('placeholder-text');
+        const loader = document.getElementById('loader');
+        const resultText = document.getElementById('result-text');
+        const videoResultsContainer = document.getElementById('video-results-container');
+        const videoGrid = document.getElementById('video-grid');
+        const actionButtons = document.getElementById('action-buttons');
+        const saveTermBtn = document.getElementById('save-term-btn');
+        const takeQuizBtn = document.getElementById('take-quiz-btn');
+        const quizContainer = document.getElementById('quiz-container');
+        const quizContent = document.getElementById('quiz-content');
+        const closeQuizBtn = document.getElementById('close-quiz');
+        const relatedTermsContainer = document.getElementById('related-terms-container');
+        const relatedTermsGrid = document.getElementById('related-terms-grid');
+        const favoritesPanel = document.getElementById('favorites-panel');
+        const favoritesToggle = document.getElementById('favorites-toggle');
+        const closeFavorites = document.getElementById('close-favorites');
+        const favoritesCount = document.getElementById('favorites-count');
+        const savedTermsList = document.getElementById('saved-terms-list');
+        const clearDataBtn = document.getElementById('clear-data');
+        const achievementContainer = document.getElementById('achievement-container');
+
+        // --- API Keys ---
+        const YOUTUBE_API_KEY = "AIzaSyC8OVyGy1skOqGJBHzKbwvJxjUkWaXyYOI";
+        const GEMINI_API_KEY = "AIzaSyAvOFe1BJB9w_mp2m92Ecfyecu-p4ii4Zs";
+
+        // --- Local Storage Management ---
+        let currentTerm = '';
+        let currentExplanation = '';
+        let learningData = JSON.parse(localStorage.getItem('investedLearning')) || {
+            savedTerms: [],
+            quizScores: [],
+            termsSearched: [],
+            achievements: []
+        };
+
+        // Initialize UI with stored data
+        updateFavoritesCount();
+        updateLearningStats();
+
+        // --- Main Form Submission Logic ---
+        termForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const term = termInput.value.trim();
+            if (!term) return;
+
+            currentTerm = term;
+            resetUI();
+            setLoading(true);
+
+            // Track searched term
+            if (!learningData.termsSearched.includes(term)) {
+                learningData.termsSearched.push(term);
+                saveLearningData();
+                checkAchievements();
+            }
+
+            try {
+                // Run API calls in parallel
+                const [explanation, videos, relatedTerms] = await Promise.all([
+                    getGeminiExplanation(term),
+                    searchYoutube(term, YOUTUBE_API_KEY),
+                    getRelatedTerms(term)
+                ]);
+
+                currentExplanation = explanation;
+                resultText.innerHTML = explanation.replace(/\n/g, '<br><br>');
+                displayVideos(videos);
+                displayRelatedTerms(relatedTerms);
+                
+                // Show action buttons
+                actionButtons.classList.remove('hidden');
+                updateSaveButton();
+
+            } catch (error) {
+                console.error("An error occurred:", error);
+                resultText.textContent = "Sorry, something went wrong. Please try again.";
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // --- Quiz System ---
+        takeQuizBtn.addEventListener('click', async () => {
+            const quiz = await generateQuiz(currentTerm, currentExplanation);
+            displayQuiz(quiz);
+        });
+
+        closeQuizBtn.addEventListener('click', () => {
+            quizContainer.classList.add('hidden');
+        });
+
+        // --- Save Term Functionality ---
+        saveTermBtn.addEventListener('click', () => {
+            if (currentTerm && currentExplanation) {
+                const savedTerm = {
+                    term: currentTerm,
+                    explanation: currentExplanation,
+                    date: new Date().toISOString(),
+                    notes: ''
+                };
+
+                const existingIndex = learningData.savedTerms.findIndex(t => t.term === currentTerm);
+                if (existingIndex === -1) {
+                    learningData.savedTerms.push(savedTerm);
+                    showAchievement('Term Saved!', `"${currentTerm}" has been added to your learning collection.`);
+                } else {
+                    showAchievement('Already Saved', `"${currentTerm}" is already in your collection.`);
+                }
+                
+                saveLearningData();
+                updateSaveButton();
+                updateFavoritesCount();
+                updateSavedTermsList();
+                checkAchievements();
+            }
+        });
+
+        // --- Favorites Panel ---
+        favoritesToggle.addEventListener('click', () => {
+            favoritesPanel.classList.add('open');
+            updateSavedTermsList();
+        });
+
+        closeFavorites.addEventListener('click', () => {
+            favoritesPanel.classList.remove('open');
+        });
+
+        clearDataBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all your learning data? This cannot be undone.')) {
+                localStorage.removeItem('investedLearning');
+                learningData = {
+                    savedTerms: [],
+                    quizScores: [],
+                    termsSearched: [],
+                    achievements: []
+                };
+                updateFavoritesCount();
+                updateLearningStats();
+                updateSavedTermsList();
+                showAchievement('Data Cleared', 'All learning data has been reset.');
+            }
+        });
+
+        // --- Helper Functions ---
+        async function getGeminiExplanation(term) {
+            const prompt = `Explain the financial term "${term}" in a simple, clear, and concise way for an absolute beginner. Structure the response in two paragraphs.`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`Gemini API request failed with status ${response.status}`);
+            const result = await response.json();
+            if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Invalid response structure from Gemini API.");
+            }
+        }
+
+        async function getRelatedTerms(term) {
+            const prompt = `List 6 related financial terms or concepts to "${term}". Return only the terms, separated by commas, no explanations.`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) return [];
+                const result = await response.json();
+                const termsText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                return termsText.split(',').map(t => t.trim()).filter(t => t.length > 0).slice(0, 6);
+            } catch (error) {
+                console.error("Error getting related terms:", error);
+                return [];
+            }
+        }
+
+        async function generateQuiz(term, explanation) {
+            const prompt = `Create a multiple choice quiz with 3 questions about the financial term "${term}" based on this explanation: "${explanation}". 
+            Return the response in this exact JSON format:
+            {
+                "questions": [
+                    {
+                        "question": "Question text here",
+                        "options": ["Option A", "Option B", "Option C", "Option D"],
+                        "correct": 0,
+                        "explanation": "Brief explanation why this is correct"
+                    }
+                ]
+            }`;
+            
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`Gemini API request failed`);
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                
+                // Extract JSON from the response
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                }
+            } catch (error) {
+                console.error("Error generating quiz:", error);
+            }
+            
+            // Fallback quiz if API fails
+            return {
+                questions: [
+                    {
+                        question: `What is ${term}?`,
+                        options: ["A financial term", "A type of food", "A sports term", "A medical condition"],
+                        correct: 0,
+                        explanation: `${term} is indeed a financial term.`
+                    }
+                ]
+            };
+        }
+
+        function displayQuiz(quiz) {
+            let currentQuestion = 0;
+            let score = 0;
+            let answers = [];
+
+            function showQuestion(index) {
+                const q = quiz.questions[index];
+                quizContent.innerHTML = `
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-400 mb-2">
+                            <span>Question ${index + 1} of ${quiz.questions.length}</span>
+                            <span>Score: ${score}/${index}</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white mb-4">${q.question}</h4>
+                        <div class="space-y-2">
+                            ${q.options.map((option, i) => `
+                                <button class="quiz-option w-full text-left p-3 bg-gray-700/50 border border-gray-600 rounded-lg hover:bg-gray-700/70 transition-colors" data-index="${i}">
+                                    ${option}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                document.querySelectorAll('.quiz-option').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const selectedIndex = parseInt(e.target.dataset.index);
+                        answers.push(selectedIndex);
+                        
+                        // Show feedback
+                        document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+                            opt.disabled = true;
+                            if (i === q.correct) {
+                                opt.classList.add('bg-green-600/30', 'border-green-500');
+                            } else if (i === selectedIndex && i !== q.correct) {
+                                opt.classList.add('bg-red-600/30', 'border-red-500');
+                            }
+                        });
+
+                        if (selectedIndex === q.correct) {
+                            score++;
+                        }
+
+                        // Show explanation and next button
+                        quizContent.innerHTML += `
+                            <div class="mt-4 p-3 bg-indigo-600/20 border border-indigo-600/50 rounded-lg">
+                                <p class="text-sm text-gray-300">${q.explanation}</p>
+                            </div>
+                            <button id="next-question" class="mt-4 px-4 py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-700 transition-colors">
+                                ${index < quiz.questions.length - 1 ? 'Next Question' : 'See Results'}
+                            </button>
+                        `;
+
+                        document.getElementById('next-question').addEventListener('click', () => {
+                            if (index < quiz.questions.length - 1) {
+                                currentQuestion++;
+                                showQuestion(currentQuestion);
+                            } else {
+                                showResults();
+                            }
+                        });
+                    });
+                });
+            }
+
+            function showResults() {
+                const percentage = Math.round((score / quiz.questions.length) * 100);
+                
+                // Save quiz score
+                learningData.quizScores.push({
+                    term: currentTerm,
+                    score: percentage,
+                    date: new Date().toISOString()
+                });
+                saveLearningData();
+                updateLearningStats();
+                checkAchievements();
+
+                quizContent.innerHTML = `
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold text-white mb-4">Quiz Complete!</h3>
+                        <div class="mb-6">
+                            <div class="text-5xl font-bold ${percentage >= 70 ? 'text-green-400' : percentage >= 40 ? 'text-yellow-400' : 'text-red-400'}">
+                                ${percentage}%
+                            </div>
+                            <p class="text-gray-400 mt-2">You got ${score} out of ${quiz.questions.length} correct</p>
+                        </div>
+                        <div class="space-y-2">
+                            ${percentage === 100 ? '<p class="text-green-400">Perfect score! You\'ve mastered this topic! 🎉</p>' :
+                              percentage >= 70 ? '<p class="text-green-400">Great job! You have a good understanding of this topic.</p>' :
+                              percentage >= 40 ? '<p class="text-yellow-400">Not bad! Review the material and try again.</p>' :
+                              '<p class="text-red-400">Keep practicing! Review the explanation and try again.</p>'}
+                        </div>
+                        <button id="close-quiz-results" class="mt-6 px-6 py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-700 transition-colors">
+                            Close
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById('close-quiz-results').addEventListener('click', () => {
+                    quizContainer.classList.add('hidden');
+                });
+            }
+
+            quizContainer.classList.remove('hidden');
+            showQuestion(0);
+        }
+
+        function displayRelatedTerms(terms) {
+            if (terms.length === 0) {
+                relatedTermsContainer.classList.add('hidden');
+                return;
+            }
+
+            relatedTermsGrid.innerHTML = terms.map(term => `
+                <button class="term-bubble px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-full text-sm text-gray-300 hover:text-white" data-term="${term}">
+                    ${term}
+                </button>
+            `).join('');
+
+            document.querySelectorAll('.term-bubble').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    termInput.value = e.target.dataset.term;
+                    termForm.dispatchEvent(new Event('submit'));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+
+            relatedTermsContainer.classList.remove('hidden');
+        }
+
+        async function searchYoutube(term, apiKey) {
+            const educationalTerm = `what is ${term} for beginners`;
+            const encodedTerm = encodeURIComponent(educationalTerm);
+            const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodedTerm}&type=video&videoDuration=short&maxResults=3&key=${apiKey}`;
+            
+            let response = await fetch(apiUrl);
+            if (!response.ok) throw new Error(`YouTube API request failed with status ${response.status}`);
+            let data = await response.json();
+            return data.items || [];
+        }
+
+        function displayVideos(videos) {
+            if (videos.length === 0) {
+                videoResultsContainer.classList.add('hidden');
+                return;
+            }
+
+            videoGrid.innerHTML = videos.map(video => {
+                const videoId = video.id.videoId;
+                const title = video.snippet.title;
+                const description = video.snippet.description;
+
+                return `
+                    <div class="bg-gray-800/40 border border-gray-700 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-1 transition-transform duration-200">
+                        <iframe class="w-full h-48" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div class="p-5">
+                            <h3 class="font-bold text-lg text-white">${title}</h3>
+                            <p class="mt-2 text-sm text-gray-400">${description.substring(0, 100)}...</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            videoResultsContainer.classList.remove('hidden');
+        }
+
+        function updateSaveButton() {
+            const isSaved = learningData.savedTerms.some(t => t.term === currentTerm);
+            saveTermBtn.innerHTML = isSaved ? 
+                '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg> Saved' :
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg> Save Term';
+        }
+
+        function updateFavoritesCount() {
+            favoritesCount.textContent = learningData.savedTerms.length;
+        }
+
+        function updateLearningStats() {
+            document.getElementById('terms-learned-count').textContent = learningData.termsSearched.length;
+            document.getElementById('quizzes-completed-count').textContent = learningData.quizScores.length;
+            
+            if (learningData.quizScores.length > 0) {
+                const avgScore = learningData.quizScores.reduce((sum, q) => sum + q.score, 0) / learningData.quizScores.length;
+                document.getElementById('average-score').textContent = Math.round(avgScore) + '%';
+            } else {
+                document.getElementById('average-score').textContent = '0%';
+            }
+        }
+
+        function updateSavedTermsList() {
+            if (learningData.savedTerms.length === 0) {
+                savedTermsList.innerHTML = '<p class="text-gray-500 text-center">No saved terms yet</p>';
+                return;
+            }
+
+            savedTermsList.innerHTML = learningData.savedTerms.map((item, index) => `
+                <div class="bg-gray-800/40 rounded-lg p-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-white">${item.term}</h4>
+                        <button class="text-red-400 hover:text-red-300" onclick="removeSavedTerm(${index})">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <textarea class="note-textarea w-full p-2 rounded text-sm text-gray-300 resize-none" 
+                              placeholder="Add your notes..." 
+                              data-index="${index}"
+                              rows="2">${item.notes || ''}</textarea>
+                    <button class="mt-2 text-sm text-indigo-400 hover:text-indigo-300" onclick="reviewTerm('${item.term}')">
+                        Review →
+                    </button>
+                </div>
+            `).join('');
+
+            // Add event listeners for notes
+            document.querySelectorAll('.note-textarea').forEach(textarea => {
+                textarea.addEventListener('blur', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    learningData.savedTerms[index].notes = e.target.value;
+                    saveLearningData();
+                });
+            });
+        }
+
+        function removeSavedTerm(index) {
+            learningData.savedTerms.splice(index, 1);
+            saveLearningData();
+            updateFavoritesCount();
+            updateSavedTermsList();
+            if (learningData.savedTerms.some(t => t.term === currentTerm) === false) {
+                updateSaveButton();
+            }
+        }
+
+        function reviewTerm(term) {
+            termInput.value = term;
+            favoritesPanel.classList.remove('open');
+            termForm.dispatchEvent(new Event('submit'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showAchievement(title, message) {
+            const achievement = document.createElement('div');
+            achievement.className = 'achievement-toast bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-lg shadow-lg mb-3';
+            achievement.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <p class="font-semibold">${title}</p>
+                        <p class="text-sm opacity-90">${message}</p>
+                    </div>
+                </div>
+            `;
+            
+            achievementContainer.appendChild(achievement);
+            
+            setTimeout(() => {
+                achievement.style.opacity = '0';
+                achievement.style.transition = 'opacity 0.5s';
+                setTimeout(() => achievement.remove(), 500);
+            }, 3000);
+        }
+
+        function checkAchievements() {
+            const achievements = [];
+            
+            if (learningData.termsSearched.length === 1 && !learningData.achievements.includes('first_search')) {
+                achievements.push({ id: 'first_search', title: 'First Steps!', message: 'You searched for your first term!' });
+            }
+            
+            if (learningData.termsSearched.length === 10 && !learningData.achievements.includes('ten_searches')) {
+                achievements.push({ id: 'ten_searches', title: 'Knowledge Seeker!', message: 'You\'ve searched for 10 terms!' });
+            }
+            
+            if (learningData.savedTerms.length === 5 && !learningData.achievements.includes('five_saves')) {
+                achievements.push({ id: 'five_saves', title: 'Collector!', message: 'You\'ve saved 5 terms to your collection!' });
+            }
+            
+            if (learningData.quizScores.length === 1 && !learningData.achievements.includes('first_quiz')) {
+                achievements.push({ id: 'first_quiz', title: 'Quiz Master!', message: 'You completed your first quiz!' });
+            }
+            
+            const perfectScores = learningData.quizScores.filter(q => q.score === 100).length;
+            if (perfectScores === 1 && !learningData.achievements.includes('perfect_score')) {
+                achievements.push({ id: 'perfect_score', title: 'Perfect!', message: 'You got a perfect score on a quiz!' });
+            }
+            
+            achievements.forEach(achievement => {
+                if (!learningData.achievements.includes(achievement.id)) {
+                    learningData.achievements.push(achievement.id);
+                    showAchievement(achievement.title, achievement.message);
+                }
+            });
+            
+            if (achievements.length > 0) {
+                saveLearningData();
+            }
+        }
+
+        function saveLearningData() {
+            localStorage.setItem('investedLearning', JSON.stringify(learningData));
+        }
+
+        function setLoading(isLoading) {
+            submitButton.disabled = isLoading;
+            submitButton.textContent = isLoading ? 'Thinking...' : 'Explain';
+            
+            if (isLoading) {
+                placeholderText.classList.add('hidden');
+                loader.classList.remove('hidden');
+                resultText.classList.add('hidden');
+                actionButtons.classList.add('hidden');
+            } else {
+                loader.classList.add('hidden');
+                resultText.classList.remove('hidden');
+                placeholderText.classList.add('hidden');
+            }
+        }
+
+        function resetUI() {
+            resultText.innerHTML = '';
+            videoResultsContainer.classList.add('hidden');
+            videoGrid.innerHTML = '';
+            quizContainer.classList.add('hidden');
+            relatedTermsContainer.classList.add('hidden');
+            actionButtons.classList.add('hidden');
+        }
+
+        // Make functions available globally for onclick handlers
+        window.removeSavedTerm = removeSavedTerm;
+        window.reviewTerm = reviewTerm;
+    </script>
+</body>
+</html>
