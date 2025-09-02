@@ -12,6 +12,7 @@ from functools import lru_cache
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+import os
 
 # --- Initialize the Flask App and API Clients ---
 app = Flask(__name__)
@@ -1278,4 +1279,5 @@ def get_trade_signals():
 
 # --- Start the Server ---
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
