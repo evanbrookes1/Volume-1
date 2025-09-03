@@ -829,7 +829,7 @@
         });
 
         async function getTradeSignalsFromBackend(tickers, timeframe) {
-            const serverUrl = 'http://127.0.0.1:5000/get-trade-signals';
+            const serverUrl = '/get-trade-signals';
             const response = await fetch(serverUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1013,7 +1013,7 @@
         // === MARKET SCREENER FUNCTIONS ===
         async function loadPresets() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/screener/presets');
+                const response = await fetch('/screener/presets');
                 const presets = await response.json();
                 
                 const container = document.getElementById('preset-container');
@@ -1171,7 +1171,7 @@
             outputDiv.classList.add('hidden');
             
             try {
-                const response = await fetch('http://127.0.0.1:5000/screener/run', {
+                const response = await fetch('/screener/run', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

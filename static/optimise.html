@@ -687,7 +687,7 @@
         }
         
         async function getOptimalPortfolioFromBackend(tickers) {
-            const serverUrl = 'http://127.0.0.1:5000/optimize-portfolio';
+            const serverUrl = '/optimize-portfolio';
             const response = await fetch(serverUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
